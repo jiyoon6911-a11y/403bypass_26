@@ -54,6 +54,8 @@ export default function VisibilityTab({
 
   // Booking List Tab control
   const [activeBookingTab, setActiveBookingTab] = useState<'today' | 'upcoming' | 'past'>('upcoming');
+  // Inner booking type filter for separating depths: all (전체), manager (에스코트 매니저), glass (수어/자막안경)
+  const [activeTypeFilter, setActiveTypeFilter] = useState<'all' | 'manager' | 'glass'>('all');
 
   // helper to toggle assistance options
   const toggleOpt = (name: string) => {
@@ -193,6 +195,78 @@ export default function VisibilityTab({
   };
 
   const activeTabItems = categorizedBookings[activeBookingTab];
+
+  // Helper function to render a single booking card cleanly
+  const renderBookingCard = (b: Booking) => {
+    const dday = getBookingDDayInfo(b.date);
+    const isManager = b.type === 'manager';
+    const typeLabel = isManager ? '동행 매니저 1:1 안심매칭' : 'AR 자막안경 스마트 대여';
+    
+    // Color schemes depending on type
+    const cardBorder = isManager 
+      ? 'border-blue-600/30 bg-blue-950/[0.04]' 
+      : 'border-cyan-600/30 bg-cyan-950/[0.03]';
+
+    const iconBg = isManager
+      ? 'bg-blue-600/10 text-blue-400'
+      : 'bg-cyan-600/10 text-cyan-400';
+
+    return (
+      <div
+        key={b.id}
+        className={`border rounded-2xl p-4 flex flex-col justify-between gap-3 shadow transition-all hover:border-slate-700/85 ${cardBorder}`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2.5">
+            <span className={`p-2 rounded-xl shrink-0 mt-0.5 ${iconBg}`}>
+              {isManager ? (
+                <Users className="w-4 h-4" />
+              ) : (
+                <Glasses className="w-4 h-4" />
+              )}
+            </span>
+            
+            <div className="space-y-1 text-left">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-wide ${dday.labelClass}`}>
+                  {dday.dDayText}
+                </span>
+                <span className="text-[11.5px] font-black text-white">{typeLabel}</span>
+              </div>
+              
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-250">{b.detail}</p>
+                <p className="text-[10px] text-slate-450 font-mono font-bold flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
+                  <span>상세일정:</span>
+                  <strong className="text-white">{b.date} {b.time}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              onCancelBooking(b.id);
+              onAnnounce(`${typeLabel} 스케줄 예약을 정지 해지 조치했습니다.`);
+            }}
+            className="text-[10.5px] text-rose-400 hover:text-rose-350 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 active:scale-95 px-3 py-1.5 rounded-xl transition-all font-black whitespace-nowrap shrink-0 hc-button-secondary cursor-pointer"
+          >
+            예약 취소
+          </button>
+        </div>
+
+        {/* Escort Guidelines subtext bar */}
+        <div className="p-2.5 bg-slate-950/90 rounded-xl border border-slate-900 flex justify-between items-center text-[10px] gap-2">
+          <span className="text-zinc-500 font-bold whitespace-nowrap flex items-center gap-1 shrink-0">
+            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+            전달 안심 지침:
+          </span>
+          <span className="text-zinc-300 truncate max-w-[210px] font-semibold text-right flex-1">{b.note}</span>
+        </div>
+      </div>
+    );
+  };
 
   // Listed theaters for beautiful custom selector grid instead of plain dropdown
   const customTheaters = [
@@ -630,8 +704,50 @@ export default function VisibilityTab({
           })}
         </div>
 
-        {/* Detailed Ticket / Reservation cards under currently expanded tab */}
-        <div className="space-y-3 pt-1">
+        {/* Dynamic Type classification depths / helper tabs requested by user */}
+        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 bg-slate-950/50 p-2.5 rounded-xl border border-slate-850/80">
+          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold">
+            <Info className="w-3.5 h-3.5 text-blue-400" />
+            <span>분류 필터:</span>
+          </div>
+          <div className="flex gap-1">
+            {[
+              { id: 'all', label: '전체 형태', count: activeTabItems.length },
+              { id: 'manager', label: '♿ 매니저 사전예약', count: activeTabItems.filter(b => b.type === 'manager').length },
+              { id: 'glass', label: '🕶️ 안경 대여신청', count: activeTabItems.filter(b => b.type === 'glass').length },
+            ].map((subFilter) => {
+              const isSubActive = activeTypeFilter === subFilter.id;
+              return (
+                <button
+                  key={subFilter.id}
+                  onClick={() => {
+                    setActiveTypeFilter(subFilter.id as any);
+                    onAnnounce(`예약 종류를 ${subFilter.label}로 정렬 필터링 하였습니다.`);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[9.5px] font-extrabold transition-all flex items-center gap-1 ${
+                    isSubActive
+                      ? subFilter.id === 'manager'
+                        ? 'bg-blue-600 text-white'
+                        : subFilter.id === 'glass'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-slate-850 text-[#00E5FF] border border-[#00E5FF]/30'
+                      : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span>{subFilter.label}</span>
+                  <span className={`px-1 text-[8px] rounded-full font-black ${
+                    isSubActive ? 'bg-black/20 text-white' : 'bg-slate-950 text-slate-500'
+                  }`}>
+                    {subFilter.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detailed Ticket / Reservation cards under currently expanded tab split by depth category */}
+        <div className="space-y-5 pt-1">
           {activeTabItems.length === 0 ? (
             <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl bg-slate-950/40 space-y-2.5">
               <CalendarPlus className="w-9 h-9 text-slate-700 mx-auto" />
@@ -656,76 +772,56 @@ export default function VisibilityTab({
               )}
             </div>
           ) : (
-            activeTabItems.map((b) => {
-              const dday = getBookingDDayInfo(b.date);
-              const isManager = b.type === 'manager';
-              const typeLabel = isManager ? '동행 매니저 1:1 안심매칭' : 'AR 자막안경 스마트 대여';
-              
-              // Color schemes depending on type
-              const cardBorder = isManager 
-                ? 'border-blue-600/30 bg-blue-950/[0.04]' 
-                : 'border-cyan-600/30 bg-cyan-950/[0.04]';
+            (() => {
+              const filteredItems = activeTypeFilter === 'all' 
+                ? activeTabItems 
+                : activeTabItems.filter(b => b.type === activeTypeFilter);
 
-              const iconBg = isManager
-                ? 'bg-blue-600/10 text-blue-400'
-                : 'bg-cyan-600/10 text-cyan-400';
+              const managerItems = filteredItems.filter(b => b.type === 'manager');
+              const glassItems = filteredItems.filter(b => b.type === 'glass');
+
+              if (filteredItems.length === 0) {
+                return (
+                  <p className="text-center text-[10px] text-zinc-500 py-4 font-bold">
+                    해당 세부 필터 조건(매니저/안경) 만족 완료된 예약이 현재 탭에 존재하지 않습니다.
+                  </p>
+                );
+              }
 
               return (
-                <div
-                  key={b.id}
-                  className={`border rounded-2xl p-4 flex flex-col justify-between gap-3 shadow transition-all hover:border-slate-700/85 ${cardBorder}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2.5">
-                      <span className={`p-2 rounded-xl shrink-0 mt-0.5 ${iconBg}`}>
-                        {isManager ? (
-                          <Users className="w-4 h-4" />
-                        ) : (
-                          <Glasses className="w-4 h-4" />
-                        )}
-                      </span>
-                      
-                      <div className="space-y-1 text-left">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-wide ${dday.labelClass}`}>
-                            {dday.dDayText}
-                          </span>
-                          <span className="text-[11.5px] font-black text-white">{typeLabel}</span>
-                        </div>
-                        
-                        <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-slate-200">{b.detail}</p>
-                          <p className="text-[10px] text-slate-450 font-mono font-bold flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
-                            <span>상세일정:</span>
-                            <strong className="text-white">{b.date} {b.time}</strong>
-                          </p>
-                        </div>
+                <div className="space-y-4">
+                  {/* DEPTH A: Accessibility Manager Group */}
+                  {managerItems.length > 0 && (
+                    <div className="space-y-2 p-1 border border-blue-500/10 bg-blue-950/[0.01] rounded-2xl">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-950/20 rounded-xl border border-blue-500/10">
+                        <Users className="w-3.5 h-3.5 text-blue-400" />
+                        <h4 className="text-[11px] font-black text-blue-400">
+                          접근성 매니저 사전 예약 ({managerItems.length}건)
+                        </h4>
+                      </div>
+                      <div className="space-y-2">
+                        {managerItems.map((b) => renderBookingCard(b))}
                       </div>
                     </div>
+                  )}
 
-                    <button
-                      onClick={() => {
-                        onCancelBooking(b.id);
-                        onAnnounce(`${typeLabel} 스케줄 예약을 정지 해지 조치했습니다.`);
-                      }}
-                      className="text-[10.5px] text-rose-400 hover:text-rose-350 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 active:scale-95 px-3 py-1.5 rounded-xl transition-all font-black whitespace-nowrap shrink-0 hc-button-secondary cursor-pointer"
-                    >
-                      예약 취소
-                    </button>
-                  </div>
-
-                  {/* Escort Guidelines subtext bar */}
-                  <div className="p-2.5 bg-slate-950/90 rounded-xl border border-slate-900 flex justify-between items-center text-[10px] gap-2">
-                    <span className="text-zinc-500 font-bold whitespace-nowrap flex items-center gap-1 shrink-0">
-                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                      전달 안심 지침:
-                    </span>
-                    <span className="text-zinc-300 truncate max-w-[210px] font-semibold text-right flex-1">{b.note}</span>
-                  </div>
+                  {/* DEPTH B: AI Glasses Rental Group */}
+                  {glassItems.length > 0 && (
+                    <div className="space-y-2 p-1 border border-cyan-500/10 bg-cyan-950/[0.01] rounded-2xl">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-cyan-950/20 rounded-xl border border-cyan-500/10">
+                        <Glasses className="w-3.5 h-3.5 text-cyan-400" />
+                        <h4 className="text-[11px] font-black text-cyan-400">
+                          AI 수어·자막 안경 현장 대여 신청 ({glassItems.length}건)
+                        </h4>
+                      </div>
+                      <div className="space-y-2">
+                        {glassItems.map((b) => renderBookingCard(b))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
-            })
+            })()
           )}
         </div>
 
