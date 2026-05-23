@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100;300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Noto Sans KR', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-neon-blue: #3B82F6;
+  --color-electric-cyan: #06B6D4;
+  --color-warning-yellow: #EAB308;
+  --color-hazard-red: #EF4444;
+  --color-safe-green: #22C55E;
+  --color-soft-gray: #6B7280;
+  --color-deep-slate: #1E293B;
+  --color-pitch-black: #000000;
+  --color-dark-bg: #0F172A;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0B0F19;
+  color: #E2E8F0;
+  transition: font-size 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+::-webkit-scrollbar-thumb {
+  background: #3B82F6;
+  border-radius: 3px;
+}
+
+/* Base high-contrast mode */
+.high-contrast-mode {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+.high-contrast-mode .hc-card {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  border: 2px solid #3B82F6 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.high-contrast-mode .hc-accent {
+  color: #00FFFF !important;
+}
+
+.high-contrast-mode .hc-badge {
+  background-color: #000000 !important;
+  border: 1px solid #FFFF00 !important;
+  color: #FFFF00 !important;
+}
+
+.high-contrast-mode .hc-button-primary {
+  background-color: #3B82F6 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+.high-contrast-mode .hc-button-secondary {
+  background-color: #000000 !important;
+  color: #00FFFF !important;
+  border: 2px solid #00FFFF !important;
+}
+
+.high-contrast-mode .hc-text-mute {
+  color: #FFFFFF !important;
+  opacity: 0.9 !important;
+}
+
+/* Shake Animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s infinite;
+}
+
+/* Custom font scaling based on HTML element scale state */
+.scale-100-percent { font-size: 13.5px !important; }
+.scale-120-percent { font-size: 16.5px !important; }
+.scale-140-percent { font-size: 19.5px !important; }
+.scale-160-percent { font-size: 22.5px !important; }
+.scale-180-percent { font-size: 25.5px !important; }
