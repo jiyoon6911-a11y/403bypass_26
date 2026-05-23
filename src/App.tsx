@@ -21,6 +21,7 @@ import MobilityTab from './components/MobilityTab';
 import VisibilityTab from './components/VisibilityTab';
 import TicketsTab from './components/TicketsTab';
 import ProfileTab from './components/ProfileTab';
+import ShowDetailView from './components/ShowDetailView';
 
 export default function App() {
   // Session states
@@ -28,6 +29,7 @@ export default function App() {
 
   // Layout states
   const [activeTab, setActiveTab] = useState<'home' | 'mobility' | 'visibility' | 'tickets' | 'profile'>('home');
+  const [selectedShowDetail, setSelectedShowDetail] = useState<Show | null>(null);
   const [activeVoiceText, setActiveVoiceText] = useState('403 BYPASS 유니버설 안내 및 탐색 센터에 오신 것을 환영합니다.');
 
   // Settings states
@@ -166,6 +168,7 @@ export default function App() {
   // Navigations handler
   const handleTabChange = (tabId: typeof activeTab) => {
     setActiveTab(tabId);
+    setSelectedShowDetail(null);
     let bannerMsg = '';
     if (tabId === 'home') bannerMsg = '홈 화면. 선호 장르별 보편적 맞춤 추천 공연과 서포터즈 정보를 전달합니다.';
     else if (tabId === 'mobility') bannerMsg = '안내맵 화면. 실시간 층별 혼잡도 상황과 스마트 수어 카메라, S-MAP 3D 공간 도면을 탐색합니다.';
@@ -352,29 +355,18 @@ export default function App() {
       {/* 2. Main Top Header layout */}
       {currentUser && (
         <header className="hc-card border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 transition-colors duration-200">
-          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-left">
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-center">
+            <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <span className="text-white font-black text-sm tracking-widest">403</span>
               </div>
-              <div className="leading-tight">
+              <div className="leading-tight text-left">
                 <h1 className="hc-accent text-sm font-black tracking-wider text-blue-500 flex items-center gap-1">
                   BYPASS 
                   <span className="hc-badge px-1.5 py-0.5 rounded text-[8px] bg-cyan-500/10 text-cyan-400 font-bold border border-cyan-500/30">UNIVERSAL</span>
                 </h1>
-                <p className="text-[9px] text-slate-400 uppercase tracking-widest hc-text-mute font-mono">Barrier-Free Platform</p>
               </div>
             </div>
-
-            {/* Quick settings gear */}
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="hc-button-secondary p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-all flex items-center gap-1.5 border border-slate-700/50 cursor-pointer"
-              aria-label="접근성 센터 설정"
-            >
-              <Settings className="w-4 h-4 animate-spin-slow" />
-              <span className="text-[10px] font-bold">접근성센터</span>
-            </button>
           </div>
         </header>
       )}
@@ -382,59 +374,70 @@ export default function App() {
       {/* 3. Tab Body Container */}
       {currentUser && (
         <main className="flex-1 w-full max-w-md mx-auto px-4 py-4 space-y-4">
-          {activeTab === 'home' && (
-            <HomeTab
-              onShowSelect={(show) => {
-                setActiveTab('tickets');
-                handleAnnounce(`선택하신 추천 공연 [${show.title}]의 모바일 배리어프리 티켓 상세권으로 슬라이딩 전환했습니다.`);
-              }}
+          {selectedShowDetail ? (
+            <ShowDetailView
+              show={selectedShowDetail}
+              onBack={() => setSelectedShowDetail(null)}
+              highContrast={highContrast}
               onAnnounce={handleAnnounce}
-              highContrast={highContrast}
             />
-          )}
+          ) : (
+            <>
+              {activeTab === 'home' && (
+                <HomeTab
+                  onShowSelect={(show) => {
+                    setSelectedShowDetail(show);
+                    handleAnnounce(`선택하신 추천 공연 [${show.title}]의 무장벽 통합 시야 검측 상세 뷰포트를 활성화하였습니다.`);
+                  }}
+                  onAnnounce={handleAnnounce}
+                  highContrast={highContrast}
+                />
+              )}
 
-          {activeTab === 'mobility' && (
-            <MobilityTab
-              onAnnounce={handleAnnounce}
-              highContrast={highContrast}
-            />
-          )}
+              {activeTab === 'mobility' && (
+                <MobilityTab
+                  onAnnounce={handleAnnounce}
+                  highContrast={highContrast}
+                />
+              )}
 
-          {activeTab === 'visibility' && (
-            <VisibilityTab
-              bookings={activeBookings}
-              onAddBooking={handleAddBooking}
-              onCancelBooking={handleCancelBooking}
-              onAnnounce={handleAnnounce}
-              highContrast={highContrast}
-            />
-          )}
+              {activeTab === 'visibility' && (
+                <VisibilityTab
+                  bookings={activeBookings}
+                  onAddBooking={handleAddBooking}
+                  onCancelBooking={handleCancelBooking}
+                  onAnnounce={handleAnnounce}
+                  highContrast={highContrast}
+                />
+              )}
 
-          {activeTab === 'tickets' && (
-            <TicketsTab
-              syncedTickets={syncedTickets}
-              onDeleteTicket={handleDeleteTicket}
-              onOpenSync={() => setIsSyncOpen(true)}
-              highContrast={highContrast}
-            />
-          )}
+              {activeTab === 'tickets' && (
+                <TicketsTab
+                  syncedTickets={syncedTickets}
+                  onDeleteTicket={handleDeleteTicket}
+                  onOpenSync={() => setIsSyncOpen(true)}
+                  highContrast={highContrast}
+                />
+              )}
 
-          {activeTab === 'profile' && (
-            <ProfileTab
-              currentUser={currentUser}
-              onLogout={handleLogout}
-              personalReviews={personalReviews}
-              onAddReview={handleAddReview}
-              onClearPersonalReviews={handleClearPersonalReviews}
-              onDeleteReview={handleDeleteReview}
-              globalReviews={globalReviews}
-              onAddComment={handleAddComment}
-              followingIds={followingIds}
-              onToggleFollow={handleToggleFollow}
-              onUpdateUserId={handleUpdateUserId}
-              onAnnounce={handleAnnounce}
-              highContrast={highContrast}
-            />
+              {activeTab === 'profile' && (
+                <ProfileTab
+                  currentUser={currentUser}
+                  onLogout={handleLogout}
+                  personalReviews={personalReviews}
+                  onAddReview={handleAddReview}
+                  onClearPersonalReviews={handleClearPersonalReviews}
+                  onDeleteReview={handleDeleteReview}
+                  globalReviews={globalReviews}
+                  onAddComment={handleAddComment}
+                  followingIds={followingIds}
+                  onToggleFollow={handleToggleFollow}
+                  onUpdateUserId={handleUpdateUserId}
+                  onAnnounce={handleAnnounce}
+                  highContrast={highContrast}
+                />
+              )}
+            </>
           )}
         </main>
       )}
@@ -496,6 +499,24 @@ export default function App() {
             </button>
           </div>
         </nav>
+      )}
+
+      {/* Floating Accessibility Center (접근성센터) */}
+      {currentUser && (
+        <div className="fixed bottom-20 right-4 md:right-[calc(50vw-210px)] z-50">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] rounded-full shadow-[0_4px_22px_rgba(37,99,235,0.5)] border border-blue-500/20 active:scale-95 transition-all cursor-pointer relative"
+            aria-label="접근성 센터 설정"
+          >
+            <Settings className="w-3.5 h-3.5 animate-spin-slow" />
+            <span className="font-sans font-bold">접근성센터</span>
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+            </span>
+          </button>
+        </div>
       )}
 
       {/* 6. Modals */}

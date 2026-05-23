@@ -2,6 +2,18 @@ import { Show, MapTheater, ReviewLog } from './types';
 
 export const SHOWS_DATA: Show[] = [
   {
+    id: 5,
+    title: "오페라의 유령",
+    genre: "뮤지컬",
+    facility: "샤롯데씨어터",
+    score: 98.0,
+    elevator: true,
+    toilet: true,
+    toiletRating: 4.8,
+    image: "https://images.unsplash.com/photo-1516307365427-30d7148c6a18?auto=format&fit=crop&q=80&w=600",
+    tags: ["휠체어석", "자막제공", "VR연동"]
+  },
+  {
     id: 1,
     title: "연극 '새로운 연극적 기쁨' 403호 시나리오",
     genre: "연극",

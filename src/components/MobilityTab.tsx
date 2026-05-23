@@ -5,7 +5,7 @@ import {
   AlertTriangle, AlertOctagon, Compass, Video, 
   HelpCircle, Accessibility, Activity, Volume2, 
   VolumeX, RefreshCw, Eye, Landmark, Navigation2, LogIn,
-  Sliders, X
+  Sliders, X, Users, TrendingUp
 } from 'lucide-react';
 import { FLOORS_DATA } from '../data';
 
@@ -94,12 +94,85 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
   const [isVibratingEffect, setIsVibratingEffect] = useState(false);
   const [isElevatorBroken, setIsElevatorBroken] = useState(false);
 
+  // Real-time crowd density congestion telemetry list
+  const [congestionList, setCongestionList] = useState([
+    { id: 'b1', area: "혜화역 B1 지하철 연결 안심 통로", level: "smooth", density: 15, text: "🟢 원활", desc: "휠체어 리프트 대기 및 교량 지연 부재. 통행 매우 양호", color: "from-green-500/10 to-emerald-500/10", borderColor: "border-green-500/30", textCol: "text-green-400" },
+    { id: 'f1', area: "1F 메인 무장벽 출입 로비 및 안내 데스크", level: "normal", density: 42, text: "🟡 보통", desc: "안내 기계 대기 3인 발생. 휠체어 전용 경사 발권 키오스크 한가함", color: "from-amber-500/10 to-yellow-500/10", borderColor: "border-amber-500/30", textCol: "text-amber-400" },
+    { id: 'f2', area: "2F 안심 매표소 및 종합 점자 촉지도 존", level: "smooth", density: 20, text: "🟢 원활", desc: "밀착 수어 대면 데스크 여유. 지체 없이 즉각 연계 매칭 가능", color: "from-green-500/10 to-emerald-500/10", borderColor: "border-green-500/30", textCol: "text-green-400" },
+    { id: 'f3', area: "3F 실외 연결 입체 안심 브리지 통로", level: "smooth", density: 8, text: "🟢 매우 원활", desc: "평로 확보 상태. 맞은편 마찰 전동 브리지 간 교통 장애 전혀 없음", color: "from-green-500/10 to-emerald-500/10", borderColor: "border-green-500/30", textCol: "text-green-400" },
+    { id: 'f4', area: "4F 객석 1층 대강당 메인 관람석 대기홀", level: "crowded", density: 88, text: "🔴 혼잡", desc: "공연 입장 직전 인파 급증. 휠체어 관람객은 우측 우회로 확보 권장", color: "from-red-500/10 to-rose-500/10", borderColor: "border-red-500/30", textCol: "text-rose-450" }
+  ]);
+
+  const handleRefreshCongestion = () => {
+    const updated = congestionList.map(item => {
+      const change = Math.floor(Math.random() * 31) - 15; // -15% to +15%
+      const nextDensity = Math.max(5, Math.min(100, item.density + change));
+      let nLevel = "smooth";
+      let nText = "🟢 원활";
+      let nTextCol = "text-green-450";
+      let nColor = "from-green-500/10 to-emerald-500/10";
+      let nBorder = "border-green-500/20";
+
+      if (nextDensity >= 70) {
+        nLevel = "crowded";
+        nText = "🔴 혼잡";
+        nTextCol = "text-rose-400";
+        nColor = "from-red-500/10 to-rose-500/10";
+        nBorder = "border-red-500/20";
+      } else if (nextDensity >= 35) {
+        nLevel = "normal";
+        nText = "🟡 보통";
+        nTextCol = "text-amber-400";
+        nColor = "from-amber-500/10 to-yellow-500/10";
+        nBorder = "border-amber-500/20";
+      }
+
+      return {
+        ...item,
+        density: nextDensity,
+        level: nLevel,
+        text: nText,
+        textCol: nTextCol,
+        color: nColor,
+        borderColor: nBorder
+      };
+    });
+
+    setCongestionList(updated);
+    onAnnounce("📡 속보: 각 층별 군중 센서 실시간 혼잡 밀집 지수 통계를 즉시 수집 가설하였습니다.");
+    speakText("실시간 혼잡 분석 센서 데이터를 갱신 탑청 수신했습니다.");
+  };
+
+  const handleAreaClick = (area: string, level: string, density: number, desc: string) => {
+    onAnnounce(`${area}의 혼잡도를 터치 확인하셨습니다. 현재 ${level === 'crowded' ? '매우 혼잡함' : level === 'normal' ? '보통' : '교통 양호 원활'} 상탭니다. 밀집율 ${density}% 로서 ${desc}`);
+    speakText(`${area} 확인. 밀집율 ${density} 퍼센트. ${desc}`);
+  };
+
   // High-fidelity 3D structural states
   const [is3DActive, setIs3DActive] = useState(false);
   const [viewMode, setViewMode] = useState<'default' | 'hazard' | 'radius'>('default');
   const [rotationX, setRotationX] = useState(55);
   const [rotationZ, setRotationZ] = useState(-18);
   const [scaling, setScaling] = useState(0.85);
+
+  // Dynamic interactive navigation state modifiers (grab, shift rotation, wheel zoom and panning offsets)
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [dragMode, setDragMode] = useState<'rotate' | 'pan'>('rotate');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const dragStartRef = useRef<{ x: number; y: number; rotX: number; rotZ: number; panX: number; panY: number; isDragging: boolean }>({
+    x: 0,
+    y: 0,
+    rotX: 55,
+    rotZ: -18,
+    panX: 0,
+    panY: 0,
+    isDragging: false
+  });
+
+  const touchStartDistanceRef = useRef<number | null>(null);
+  const touchStartScaleRef = useRef<number>(0.85);
 
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -228,12 +301,288 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
   const handleElevatorToggle = () => {
     const nextState = !isElevatorBroken;
     setIsElevatorBroken(nextState);
-    if (!nextState) {
-      speakText("혜화역 승강 설비가 정상 가동으로 복구되었습니다.");
-      onAnnounce("🛗 [교통약자 속보] 혜화역 4번출구 승강 설비가 가동 복구되었습니다.");
+    if (nextState) {
+      onAnnounce("🚨 경보: 지하철 연계 엘리베이터 점검 고장이 접수되었습니다. 대체 이동 우회로 지도를 참고해 주시기 바랍니다.");
+      speakText("주의! 지하철 연계 승강기 고장 점검 중. 대체 우회로를 사상 투영합니다.");
     } else {
-      speakText("혜화역 4번출구 승강 설비가 검사 점검으로 중지되었습니다.");
-      onAnnounce("🛗 [교통약자 속보] 혜화역 4번출구 승강 설비가 점검 작업 진행을 위해 일시 정지되었습니다.");
+      onAnnounce("🟢 해제: 지하철 연계 엘리베이터가 정상 보도로 전면 회복되었습니다.");
+      speakText("승강기 수리 복구 완료. 모든 다층 이동로가 정상 통행 가능 상탭니다.");
+    }
+  };
+
+  // 1. Mouse Drag, shift, roll interactive Event Handlers
+  const handleStageMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // We only support left click or middle click dragging
+    if (e.button !== 0 && e.button !== 1) return;
+    e.preventDefault();
+
+    const actualMode = (e.shiftKey || e.button === 1) ? 'pan' : dragMode;
+    setIsDragging(true);
+
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      rotX: rotationX,
+      rotZ: rotationZ,
+      panX: panX,
+      panY: panY,
+      isDragging: true
+    };
+
+    const handleMouseMove = (mvEv: MouseEvent) => {
+      if (!dragStartRef.current.isDragging) return;
+      const dx = mvEv.clientX - dragStartRef.current.x;
+      const dy = mvEv.clientY - dragStartRef.current.y;
+
+      if (actualMode === 'rotate') {
+        const targetRotZ = dragStartRef.current.rotZ + dx * 0.55;
+        const targetRotX = Math.max(15, Math.min(85, dragStartRef.current.rotX - dy * 0.45));
+        setRotationZ(targetRotZ);
+        setRotationX(targetRotX);
+      } else {
+        setPanX(dragStartRef.current.panX + dx);
+        setPanY(dragStartRef.current.panY + dy);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragStartRef.current.isDragging = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // 2. Touch dragging and double swipe pinch zoom
+  const handleStageTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 0) return;
+
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+      touchStartDistanceRef.current = distance;
+      touchStartScaleRef.current = scaling;
+      return;
+    }
+
+    const touch = e.touches[0];
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      rotX: rotationX,
+      rotZ: rotationZ,
+      panX: panX,
+      panY: panY,
+      isDragging: true
+    };
+  };
+
+  const handleStageTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && touchStartDistanceRef.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+      const ratio = distance / touchStartDistanceRef.current;
+      const targetScale = Math.max(0.3, Math.min(2.5, touchStartScaleRef.current * ratio));
+      setScaling(targetScale);
+      return;
+    }
+
+    if (!dragStartRef.current.isDragging || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragStartRef.current.x;
+    const dy = touch.clientY - dragStartRef.current.y;
+
+    if (dragMode === 'rotate') {
+      const targetRotZ = dragStartRef.current.rotZ + dx * 0.6;
+      const targetRotX = Math.max(15, Math.min(85, dragStartRef.current.rotX - dy * 0.5));
+      setRotationZ(targetRotZ);
+      setRotationX(targetRotX);
+    } else {
+      setPanX(dragStartRef.current.panX + dx);
+      setPanY(dragStartRef.current.panY + dy);
+    }
+  };
+
+  const handleStageTouchEnd = () => {
+    setIsDragging(false);
+    dragStartRef.current.isDragging = false;
+    touchStartDistanceRef.current = null;
+  };
+
+  // 3. Mouse Wheel Scroll Zoom handler
+  const handleStageWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const zoomIntensity = 0.08;
+    const delta = e.deltaY < 0 ? 1 : -1;
+    const targetScale = Math.max(0.35, Math.min(2.5, scaling + delta * zoomIntensity));
+    setScaling(targetScale);
+  };
+
+  // 4. Dynamic architectural detailed plan builder for each level resembling the uploaded styling
+  const renderFloorPlanBlueprint = (floorNum: number) => {
+    switch (floorNum) {
+      case 1:
+        return (
+          <g>
+            {/* Outline box */}
+            <rect x="10" y="10" width="320" height="190" rx="14" fill="#0c0d12" stroke="#333a4d" strokeWidth="2.5" />
+            {/* Grid background lines */}
+            <line x1="10" y1="50" x2="330" y2="50" stroke="#1d2230" strokeDasharray="4,4" />
+            <line x1="10" y1="100" x2="330" y2="100" stroke="#1d2230" strokeDasharray="4,4" />
+            <line x1="10" y1="150" x2="330" y2="150" stroke="#1d2230" strokeDasharray="4,4" />
+            <line x1="110" y1="10" x2="110" y2="200" stroke="#1d2230" strokeDasharray="4,4" />
+            <line x1="220" y1="10" x2="220" y2="200" stroke="#1d2230" strokeDasharray="4,4" />
+
+            {/* Subway Corridor link on Left */}
+            <rect x="20" y="25" width="75" height="150" rx="8" fill="#141722" stroke="#2a334a" strokeWidth="1.5" />
+            <text x="57" y="55" fill="#8f9bb3" fontSize="8" fontWeight="black" textAnchor="middle">혜화역 4번출구</text>
+            <text x="57" y="68" fill="#586782" fontSize="7" fontWeight="bold" textAnchor="middle">지하 무장벽 연계</text>
+            <path d="M 40,90 L 75,90 M 40,110 L 75,110 M 45,90 L 45,110" stroke="#3e4a68" strokeWidth="1" />
+
+            {/* Main Entrance Gates at bottom */}
+            <rect x="110" y="155" width="105" height="30" rx="4" fill="#141c2d" stroke="#00E5FF" strokeWidth="1.2" opacity="0.8" />
+            <text x="162" y="173" fill="#00E5FF" fontSize="8.5" fontWeight="black" textAnchor="middle">로비 메인 게이트</text>
+
+            {/* Information Desk Center */}
+            <rect x="135" y="105" width="55" height="25" rx="4" fill="#192338" stroke="#2c3a57" strokeWidth="1.5" />
+            <text x="162" y="120" fill="#a0aec0" fontSize="8" fontWeight="black" textAnchor="middle">안내 데스크</text>
+
+            {/* Restrooms right */}
+            <rect x="235" y="25" width="85" height="40" rx="6" fill="#16221c" stroke="#22c55e" strokeWidth="1.5" />
+            <text x="277" y="44" fill="#22c55e" fontSize="8" fontWeight="black" textAnchor="middle">🚻 로비 장애인</text>
+            <text x="277" y="55" fill="#60a5fa" fontSize="7" fontWeight="bold" textAnchor="middle">배리어프리 변환 완료</text>
+
+            {/* Management & Emergency control room bottom right */}
+            <rect x="235" y="80" width="85" height="45" rx="6" fill="#1a1215" stroke="#4a2e35" strokeWidth="1.5" />
+            <text x="277" y="98" fill="#cbd5e1" fontSize="8" fontWeight="bold" textAnchor="middle">방재 제어실</text>
+            <text x="277" y="110" fill="#64748b" fontSize="7.5" fontWeight="bold" textAnchor="middle">재난 피난 본부</text>
+
+            {/* Ticket Machine Kiosks */}
+            <rect x="110" y="25" width="105" height="35" rx="4" fill="#13151a" stroke="#2c303d" strokeWidth="1.5" />
+            <circle cx="130" cy="42" r="4" fill="#3b82f6" />
+            <circle cx="162" cy="42" r="4" fill="#3b82f6" />
+            <circle cx="195" cy="42" r="4" fill="#3b82f6" />
+            <text x="162" y="54" fill="#8a99ad" fontSize="6" fontWeight="bold" textAnchor="middle">음성안내 무인 키오스크 단말기</text>
+          </g>
+        );
+
+      case 2:
+        return (
+          <g>
+            <rect x="10" y="10" width="320" height="190" rx="14" fill="#0d0e14" stroke="#3d3730" strokeWidth="2.5" />
+            {/* Grid references */}
+            <line x1="10" y1="50" x2="330" y2="50" stroke="#211b15" strokeDasharray="3,3" />
+            <line x1="10" y1="100" x2="330" y2="100" stroke="#211b15" strokeDasharray="3,3" />
+            <line x1="10" y1="150" x2="330" y2="150" stroke="#211b15" strokeDasharray="3,3" />
+            <line x1="110" y1="10" x2="110" y2="200" stroke="#211b15" strokeDasharray="3,3" />
+            <line x1="220" y1="10" x2="220" y2="200" stroke="#211b15" strokeDasharray="3,3" />
+
+            {/* Left Hand: Snack bar & Kitchen */}
+            <rect x="20" y="25" width="80" height="100" rx="8" fill="#171311" stroke="#443125" strokeWidth="1.5" />
+            <text x="60" y="55" fill="#c084fc" fontSize="8" fontWeight="black" textAnchor="middle">안심 푸드존</text>
+            <text x="60" y="68" fill="#a18270" fontSize="7" fontWeight="bold" textAnchor="middle">저상형 카운터 적용</text>
+            {/* Tables & Chairs symbols */}
+            <circle cx="45" cy="95" r="5" fill="#2d2218" stroke="#5c442c" />
+            <circle cx="75" cy="95" r="5" fill="#2d2218" stroke="#5c442c" />
+
+            {/* Central Box Office: Ticket window with beautiful highlight */}
+            <rect x="115" y="25" width="100" height="45" rx="6" fill="#1c2536" stroke="#00E5FF" strokeWidth="2" />
+            <text x="165" y="47" fill="#00E5FF" fontSize="9.5" fontWeight="black" textAnchor="middle">통합 안심 매표소</text>
+            <text x="165" y="60" fill="#e2e8f0" fontSize="7" fontWeight="black" textAnchor="middle">BOX OFFICE (수어대면)</text>
+
+            {/* Barrier free desk right */}
+            <rect x="230" y="25" width="90" height="55" rx="6" fill="#152620" stroke="#10b981" strokeWidth="1.5" />
+            <text x="275" y="45" fill="#10b981" fontSize="8" fontWeight="black" textAnchor="middle">촉지도 & 음성존</text>
+            <text x="275" y="58" fill="#6ee7b7" fontSize="7" fontWeight="bold" textAnchor="middle">종합 수어가이드 겸용</text>
+
+            {/* Lobby / waiting area */}
+            <rect x="115" y="85" width="205" height="90" rx="8" fill="#12131a" stroke="#222530" strokeWidth="1.5" />
+            <text x="217" y="115" fill="#94a3b8" fontSize="9.5" fontWeight="bold" textAnchor="middle">중앙 대합 광장 (Lounge)</text>
+            <text x="217" y="130" fill="#64748b" fontSize="7.5" fontWeight="medium" textAnchor="middle">휠체어 정차 주차 베이 5개소 설치완료</text>
+
+            {/* Elevator symbol bottom left */}
+            <rect x="20" y="140" width="80" height="40" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1" />
+            <text x="60" y="164" fill="#38bdf8" fontSize="8" fontWeight="bold" textAnchor="middle">🛗 승강기 1호기</text>
+          </g>
+        );
+
+      case 3:
+        return (
+          <g>
+            <rect x="10" y="10" width="320" height="190" rx="14" fill="#0a0a0c" stroke="#27272a" strokeWidth="2.5" />
+            
+            {/* Left tower base */}
+            <rect x="15" y="20" width="80" height="160" rx="10" fill="#141416" stroke="#3f3f46" strokeWidth="2" />
+            <line x1="15" y1="70" x2="95" y2="70" stroke="#27272a" />
+            <line x1="15" y1="120" x2="95" y2="120" stroke="#27272a" />
+            <text x="55" y="45" fill="#a1a1aa" fontSize="8" fontWeight="black" textAnchor="middle">MAIN 본관 타워</text>
+            <text x="55" y="100" fill="#71717a" fontSize="7" fontWeight="medium" textAnchor="middle">연결 대기 로비</text>
+
+            {/* Right tower base */}
+            <rect x="245" y="20" width="80" height="160" rx="10" fill="#141416" stroke="#3f3f46" strokeWidth="2" />
+            <line x1="245" y1="70" x2="325" y2="70" stroke="#27272a" />
+            <line x1="245" y1="120" x2="325" y2="120" stroke="#27272a" />
+            <text x="285" y="45" fill="#a1a1aa" fontSize="8" fontWeight="black" textAnchor="middle">별관 시네마동</text>
+            <text x="285" y="100" fill="#71717a" fontSize="7" fontWeight="medium" textAnchor="middle">입장 티켓 게이트</text>
+
+            {/* Connecting Bridge Corridor in center */}
+            <rect x="95" y="65" width="150" height="70" fill="#0e1726" stroke="#1d4ed8" strokeWidth="2" />
+            {/* Railing stripes */}
+            <line x1="95" y1="70" x2="245" y2="70" stroke="#60a5fa" strokeWidth="2" />
+            <line x1="95" y1="130" x2="245" y2="130" stroke="#60a5fa" strokeWidth="2" />
+            
+            {/* Safety Anti-slip yellow pattern markings */}
+            <line x1="110" y1="70" x2="120" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+            <line x1="135" y1="70" x2="145" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+            <line x1="160" y1="70" x2="170" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+            <line x1="185" y1="70" x2="195" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+            <line x1="210" y1="70" x2="220" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+            <line x1="235" y1="70" x2="245" y2="130" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
+
+            <text x="170" y="98" fill="#93c5fd" fontSize="9.5" fontWeight="black" textAnchor="middle">실외 안심 연결 브릿지</text>
+            <text x="170" y="112" fill="#fbbf24" fontSize="7.5" fontWeight="semibold" textAnchor="middle">우천 시 고마찰 패드 부착 완비</text>
+          </g>
+        );
+
+      case 4:
+      default:
+        return (
+          <g>
+            <rect x="10" y="10" width="320" height="190" rx="14" fill="#0e0a0d" stroke="#4c273a" strokeWidth="2.5" />
+            {/* Grid */}
+            <line x1="10" y1="50" x2="330" y2="50" stroke="#2d1320" strokeDasharray="3,3" />
+            <line x1="10" y1="100" x2="330" y2="100" stroke="#2d1320" strokeDasharray="3,3" />
+            <line x1="10" y1="150" x2="330" y2="150" stroke="#2d1320" strokeDasharray="3,3" />
+
+            {/* Stage area front */}
+            <rect x="40" y="20" width="260" height="35" rx="6" fill="#2d1320" stroke="#f43f5e" strokeWidth="2.5" />
+            <text x="170" y="42" fill="#f43f5e" fontSize="10" fontWeight="black" textAnchor="middle">MAIN AUDITORIUM STAGE (메인 무대)</text>
+
+            {/* Left Side corridor */}
+            <rect x="20" y="65" width="45" height="120" rx="6" fill="#141215" stroke="#2c303d" strokeWidth="1.2" />
+            <text x="42" y="110" fill="#a0aec0" fontSize="7" fontWeight="bold" textAnchor="middle" transform="rotate(-90, 42, 110)">◀ 피난 대피 보도</text>
+
+            {/* Right Side corridor */}
+            <rect x="275" y="65" width="45" height="120" rx="6" fill="#141215" stroke="#2c303d" strokeWidth="1.2" />
+            <text x="297" y="110" fill="#a0aec0" fontSize="7" fontWeight="bold" textAnchor="middle" transform="rotate(90, 297, 110)">피난 대피 보도 ▶</text>
+
+            {/* Seating curve concentric path lines */}
+            <path d="M 80,85 Q 170,105 260,85" stroke="#4c1e30" strokeWidth="5" fill="none" strokeLinecap="round" />
+            <path d="M 80,110 Q 170,130 260,110" stroke="#4c1e30" strokeWidth="5" fill="none" strokeLinecap="round" />
+            <path d="M 80,135 Q 170,155 260,135" stroke="#4c1e30" strokeWidth="5" fill="none" strokeLinecap="round" />
+
+            {/* Special Wheelchair Seats dedicated bay */}
+            <rect x="110" y="145" width="120" height="35" rx="6" fill="#0d2621" stroke="#059669" strokeWidth="1.8" />
+            <text x="170" y="160" fill="#34d399" fontSize="8" fontWeight="black" textAnchor="middle">♿ 교통약자 동반 휠체어석</text>
+            <text x="170" y="172" fill="#a7f3d0" fontSize="6.5" fontWeight="bold" textAnchor="middle">장애인 안심 특별 전용 공간 (4석 보유)</text>
+          </g>
+        );
     }
   };
 
@@ -585,69 +934,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
           </div>
         )}
 
-        {/* SIMULATION TESTER CARD */}
-        {!isCameraActive && (
-          <div className="bg-[#121214] border border-[#212124] rounded-3xl p-6 shadow-xl text-left mt-4 space-y-4">
-            <div className="space-y-2">
-              <span className="text-[9px] bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 px-2 py-0.5 rounded font-black tracking-wider uppercase inline-block">
-                안심 진동/음성 시뮬레이터
-              </span>
-              <h3 className="text-lg font-black text-white tracking-tight flex items-center gap-1.5 pt-1 font-sans">
-                <Sliders className="w-5 h-5 text-[#00E5FF]" />
-                피드백 장치 모의 테스트
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-sans font-semibold">
-                실제 카메라 가동 없이도 안전 알림 및 긴급 단차 진동 피드백을 미리 체험하고 수치를 체크할 수 있습니다.
-              </p>
-            </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => triggerSimulationAlert('step')}
-                className={`flex flex-col items-center justify-center py-2 px-1.5 rounded-xl border text-[9px] font-extrabold transition-all cursor-pointer ${
-                  simulatedEnvironment === 'step'
-                    ? 'bg-amber-500/25 border-amber-500 text-amber-200'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <AlertTriangle className="w-4 h-4 text-amber-400 mb-1" />
-                <span>⚠️ 전방 턱 감지</span>
-                <span className="text-[7.5px] text-slate-500 font-mono mt-0.5">(높이 12cm)</span>
-              </button>
-
-              <button
-                onClick={() => triggerSimulationAlert('obstacle')}
-                className={`flex flex-col items-center justify-center py-2 px-1.5 rounded-xl border text-[9px] font-extrabold transition-all cursor-pointer ${
-                  simulatedEnvironment === 'obstacle'
-                    ? 'bg-red-500/25 border-red-500 text-red-200'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <AlertOctagon className="w-4 h-4 text-red-500 mb-1 animate-pulse" />
-                <span>🚨 돌출물 감지</span>
-                <span className="text-[7.5px] text-slate-500 font-mono mt-0.5">(이동 불가)</span>
-              </button>
-
-              <button
-                onClick={() => triggerSimulationAlert('safe')}
-                className={`flex flex-col items-center justify-center py-2 px-1.5 rounded-xl border text-[9px] font-extrabold transition-all cursor-pointer ${
-                  simulatedEnvironment === 'safe'
-                    ? 'bg-emerald-500/25 border-emerald-500 text-emerald-200'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <CheckCircle className="w-4 h-4 text-emerald-400 mb-1" />
-                <span>✅ 평탄도로 확보</span>
-                <span className="text-[7.5px] text-slate-500 font-mono mt-0.5">(안전 보행)</span>
-              </button>
-            </div>
-
-            {/* Simulated actions triggers info display */}
-            <div className="text-[8px] bg-slate-900 border border-slate-850 p-2 rounded-lg text-slate-400 text-center font-bold">
-              🖥️ 실 장치 테스트: 경고 선택 즉시 <span className="text-amber-400">navigator.vibrate</span> 진동 지시가 로컬 단말기에 하드웨어로 전달 연동됩니다.
-            </div>
-          </div>
-        )}
 
         {/* Camera toggle bottom button */}
         {isCameraActive && (
@@ -659,6 +946,88 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
             <span>AI AR 카메라 길안내 보정 중지하기</span>
           </button>
         )}
+      </div>
+
+      {/* SECTION: 실시간 현장 혼잡도 분석 (Live Crowd Density Telemetry) */}
+      <div className="hc-card rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4 text-left shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="space-y-1">
+            <span className="text-[9px] bg-cyan-500/15 text-[#00E5FF] border border-cyan-500/30 px-2.5 py-1 rounded font-black tracking-widest uppercase hc-badge inline-block animate-pulse">
+              LIVE DATA RADAR
+            </span>
+            <h3 className="text-base font-black text-white tracking-tight flex items-center gap-2 font-sans">
+              <Users className="w-5 h-5 text-[#00E5FF]" />
+              실시간 현장 혼잡도 및 통제 차단 분석
+            </h3>
+            <p className="text-xs text-slate-400 font-semibold font-sans">
+              출발지 지하철 승차 터널구간부터 최접점 객석 진입로까지 통제 가능한 실시간 혼잡도입니다.
+            </p>
+          </div>
+
+          <button
+            onClick={handleRefreshCongestion}
+            className="px-3.5 py-2.5 bg-[#121214] hover:bg-slate-800 text-[#00E5FF] border border-[#00E5FF]/30 hover:border-[#00E5FF]/60 rounded-xl text-[10.5px] font-black transition-all flex items-center gap-1.5 active:scale-95 whitespace-nowrap self-end sm:self-center auto-cols-max shrink-0 cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-[#00E5FF]" />
+            실시간 현황 갱신
+          </button>
+        </div>
+
+        {/* Live Congestion section list */}
+        <div className="space-y-3 pt-1">
+          {congestionList.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => handleAreaClick(item.area, item.level, item.density, item.desc)}
+              className={`p-3.5 rounded-2xl border bg-gradient-to-r ${item.color} ${item.borderColor} hover:opacity-90 transition-all cursor-pointer space-y-2`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded font-mono font-black text-slate-400 border border-slate-850 uppercase">
+                    {item.id.toUpperCase()}
+                  </span>
+                  <span className="text-[11.5px] font-extrabold text-white tracking-tight">
+                    {item.area}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10.5px] font-black ${item.textCol}`}>
+                    {item.text}
+                  </span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-[11px] font-mono font-black text-white">
+                    {item.density}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress bar and helper subtext */}
+              <div className="space-y-1.5">
+                <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+                  <div
+                    style={{ width: `${item.density}%` }}
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      item.level === 'crowded' ? 'bg-rose-500' :
+                      item.level === 'normal' ? 'bg-amber-500' :
+                      'bg-emerald-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[9px] text-slate-400 font-sans font-bold leading-normal">
+                  <p className="line-clamp-1">{item.desc}</p>
+                  <p className="text-[#00E5FF] hover:underline whitespace-nowrap shrink-0">TTS 가이드 🔊</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-3.5 bg-[#0b0c10] rounded-xl border border-slate-850/90 text-left">
+          <p className="text-[10px] text-zinc-400 font-sans font-bold leading-relaxed">
+            💡 <strong className="text-cyan-400">보도 안내 팁:</strong> 개별 구역 카드를 터치하면 현재 밀집 실시간 가설 현황과 전동 휠체어 전후 회전 반경 확보용 음성 보도 가이드를 즉치 전송 탑청해 드립니다.
+          </p>
+        </div>
       </div>
 
       {/* SECTION 2: 건물 3D 입체도 (Interactive Architectural Spatial Floor schematic map) */}
@@ -868,196 +1237,263 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
             </div>
 
             {/* Center Viewport Stage (The main 3D visualization arena) */}
-            <div className="flex-1 relative flex flex-col justify-between bg-[#08080a] p-4 overflow-hidden">
+            <div className="flex-1 relative flex flex-col justify-between bg-[#08080a] p-4 overflow-hidden select-none">
               
-              {/* 3D ROTATION HUD CONTROL BAR (Floating overlay on main viewport) */}
-              <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 bg-slate-900/95 border border-slate-850 p-1.5 rounded-2xl shadow-2xl backdrop-blur-sm">
+              {/* 3D INTERACTIVE CONTROL BAR (Floating overlay with mode toggles) */}
+              <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl backdrop-blur-sm flex-wrap max-w-[280px] sm:max-w-none">
+                {/* Drag Mode Toggles */}
+                <button
+                  onClick={() => {
+                    setDragMode('rotate');
+                    onAnnounce("마우스 및 터치 드래그 동작을 [3D 각도 회전 모드]로 변경했습니다.");
+                  }}
+                  className={`px-2 py-1.5 rounded-xl text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                    dragMode === 'rotate' ? 'bg-[#00E5FF] text-slate-950 shadow-md font-bold' : 'hover:bg-slate-800 text-slate-300'
+                  }`}
+                  title="드래그시 각도 회전"
+                >
+                  🔄 회전 모드
+                </button>
+                <button
+                  onClick={() => {
+                    setDragMode('pan');
+                    onAnnounce("마우스 및 터치 드래그 동작을 [도면 평면 이동(Pan) 모드]로 변경했습니다.");
+                  }}
+                  className={`px-2 py-1.5 rounded-xl text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                    dragMode === 'pan' ? 'bg-cyan-500 text-slate-950 shadow-md font-bold' : 'hover:bg-slate-800 text-slate-300'
+                  }`}
+                  title="드래그시 도면 이동"
+                >
+                  🖐️ 이동 모드
+                </button>
+
+                <div className="w-[1.2px] h-4 bg-slate-800 hidden sm:block"></div>
+
+                {/* Legacy adjustments fallback */}
                 <button 
                   onClick={() => setRotationZ(z => z - 15)}
-                  className="p-2 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all cursor-pointer whitespace-nowrap"
+                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="좌회전"
                 >
-                  ↺ 3D 회전
+                  ↺
                 </button>
                 <button 
                   onClick={() => setRotationZ(z => z + 15)}
-                  className="p-2 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all cursor-pointer whitespace-nowrap"
+                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="우회전"
                 >
-                  ↻ 3D 회전
+                  ↻
                 </button>
-                <div className="w-[1.5px] h-4 bg-slate-800"></div>
                 <button 
                   onClick={() => setRotationX(x => Math.min(x + 10, 80))}
-                  className="p-2 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all cursor-pointer whitespace-nowrap"
-                  title="높이기"
+                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  title="더 눕히기"
                 >
-                  ▲ 눕히기
+                  ▲
                 </button>
                 <button 
-                  onClick={() => setRotationX(x => Math.max(x - 10, 25))}
-                  className="p-2 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all cursor-pointer whitespace-nowrap"
-                  title="내리기"
+                  onClick={() => setRotationX(x => Math.max(x - 10, 20))}
+                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  title="더 세우기"
                 >
-                  ▼ 세우기
+                  ▼
                 </button>
-                <div className="w-[1.5px] h-4 bg-slate-800"></div>
+
+                <div className="w-[1.2px] h-4 bg-slate-800"></div>
+
+                {/* Zoom hotkeys */}
+                <button
+                  onClick={() => setScaling(s => Math.min(2.5, s + 0.15))}
+                  className="p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
+                  title="확대"
+                >
+                  ➕
+                </button>
+                <button
+                  onClick={() => setScaling(s => Math.max(0.3, s - 0.15))}
+                  className="p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
+                  title="축소"
+                >
+                  ➖
+                </button>
+
+                {/* Reset State View trigger */}
                 <button 
                   onClick={() => {
                     setRotationX(55);
                     setRotationZ(-18);
                     setScaling(0.85);
+                    setPanX(0);
+                    setPanY(0);
+                    onAnnounce("기본 구조 시야각 및 확대/이동 좌표를 완전 초기화했습니다.");
                   }}
-                  className="p-2 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 border border-[#00E5FF]/20 rounded-xl text-[10px] font-black transition-all cursor-pointer"
+                  className="p-1.5 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 border border-[#00E5FF]/20 rounded-xl text-[9px] font-black transition-all cursor-pointer"
                   title="기본 시야 복원"
                 >
-                  시야 리셋
+                  리셋
                 </button>
               </div>
 
               {/* Watermark status directly floating on viewport */}
               <div className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-slate-900/90 border border-slate-800/80 px-3 py-1.5 rounded-xl text-[9px] font-mono font-bold text-slate-400 shadow-md">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span className="uppercase tracking-widest text-emerald-400">S-MAP ENGINE: CONNECTED</span>
+                <span className="uppercase tracking-widest text-[#00E5FF]">S-MAP BUILDER: INTERACTIVE</span>
               </div>
 
-              {/* Real Canvas Center Display Stage */}
-              <div className="flex-1 w-full flex items-center justify-center relative overflow-hidden my-4">
+              {/* Real Canvas Center Display Stage - Bound with drag handlers */}
+              <div 
+                onMouseDown={handleStageMouseDown}
+                onTouchStart={handleStageTouchStart}
+                onTouchMove={handleStageTouchMove}
+                onTouchEnd={handleStageTouchEnd}
+                onWheel={handleStageWheel}
+                className={`flex-1 w-full flex items-center justify-center relative overflow-hidden my-4 select-none ${
+                  isDragging ? 'cursor-grabbing' : dragMode === 'rotate' ? 'cursor-grab' : 'cursor-move'
+                }`}
+                style={{ touchAction: 'none' }}
+              >
                 
-                {/* Stylized background outline depicting architectural map schematics */}
+                {/* Stylized custom transform wrap bounding all vectors and billboards */}
                 <div 
                   style={{ 
-                    transform: `perspective(1200px) rotateX(${rotationX}deg) rotateZ(${rotationZ}deg) scale(${scaling * 1.15})`,
+                    transform: `perspective(1200px) rotateX(${rotationX}deg) rotateZ(${rotationZ}deg) scale(${scaling}) translate3d(${panX}px, ${panY}px, 0px)`,
                     transformStyle: 'preserve-3d',
-                    transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+                    transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                   }}
-                  className="relative w-[340px] h-[210px] rounded-3xl border border-cyan-500/20 bg-slate-900/30 flex items-center justify-center shadow-[0_0_50px_rgba(0,229,255,0.06)]"
+                  className="relative w-[340px] h-[210px] rounded-3xl border border-cyan-500/20 bg-slate-950/40 flex items-center justify-center shadow-[0_0_55px_rgba(0,229,255,0.08)]"
                 >
                   
                   {/* Neon inner grid overlay */}
                   <div className="absolute inset-0 opacity-[0.22] bg-[linear-gradient(rgba(0,229,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.08)_1px,transparent_1px)] bg-[size:16px_16px] rounded-3xl"></div>
 
-                  {/* Floor text on the ground */}
-                  <div className="absolute top-6 left-8 select-none pointer-events-none font-mono font-black text-[18px] text-[#00E5FF]/10 tracking-widest uppercase">
-                    {selectedFloor}F REAL STRUCT
+                  {/* Floor watermark text */}
+                  <div className="absolute bottom-4 right-5 select-none pointer-events-none font-mono font-black text-[12px] text-[#00E5FF]/20 tracking-wider">
+                    {selectedFloor}F PLAN STRUCT
                   </div>
 
-                  {/* SVG route drawing path */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-[#00E5FF] fill-none z-10" viewBox="0 0 340 210">
-                    <path 
-                      d="M 50,130 L 130,90 L 210,120 L 300,75" 
-                      strokeWidth="4" 
-                      strokeLinecap="round" 
-                      strokeDasharray={viewMode === 'radius' ? "6,4" : "none"}
-                      className={viewMode === 'radius' ? "stroke-emerald-400 animate-pulse" : "stroke-cyan-400/80"} 
-                    />
-                    <path 
-                      d="M 50,130 L 130,90 L 210,120 L 300,75" 
-                      strokeWidth="1.5" 
-                      className="stroke-white/40" 
-                    />
+                  {/* Core Custom Blueprint Floor-specific SVG Render */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-5" viewBox="0 0 340 210">
+                    {renderFloorPlanBlueprint(selectedFloor)}
                   </svg>
 
-                  {/* 3D Billboards positioning */}
-                  <div 
-                    style={{ 
-                      left: '50px', 
-                      top: '130px',
-                      transform: `translate(-50%, -50%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
-                    }}
-                    className="absolute z-25 flex flex-col items-center pointer-events-none select-none transition-transform"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-cyan-500 border border-white flex items-center justify-center shadow-lg animate-pulse">
-                      <span className="text-[7.5px] font-bold text-slate-950">1</span>
-                    </div>
-                    <div className="mt-1 bg-slate-950/95 text-white border border-slate-800 text-[6.5px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap">
-                      🛗 메인 승강전초
-                    </div>
-                  </div>
+                  {/* SVG glowing route dynamic drawing path */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-[#00E5FF] fill-none z-10" viewBox="0 0 340 210">
+                    {DETAILED_3D_FLOORS[selectedFloor]?.visualPathNodes && (
+                      <>
+                        <path 
+                          d={DETAILED_3D_FLOORS[selectedFloor].visualPathNodes.map((node, idx) => `${idx === 0 ? 'M' : 'L'} ${node.x * 3.4},${node.y * 2.1}`).join(' ')}
+                          strokeWidth="4" 
+                          strokeLinecap="round" 
+                          strokeDasharray={viewMode === 'radius' ? "6,4" : "none"}
+                          className={viewMode === 'radius' ? "stroke-emerald-400 animate-pulse" : "stroke-cyan-400/80"} 
+                        />
+                        <path 
+                          d={DETAILED_3D_FLOORS[selectedFloor].visualPathNodes.map((node, idx) => `${idx === 0 ? 'M' : 'L'} ${node.x * 3.4},${node.y * 2.1}`).join(' ')}
+                          strokeWidth="1.5" 
+                          className="stroke-white/40" 
+                        />
+                      </>
+                    )}
+                  </svg>
 
-                  <div 
-                    style={{ 
-                      left: '300px', 
-                      top: '75px',
-                      transform: `translate(-50%, -50%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
-                    }}
-                    className="absolute z-25 flex flex-col items-center pointer-events-none select-none transition-transform"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-blue-500 border border-white flex items-center justify-center shadow-lg animate-pulse">
-                      <span className="text-[7.5px] font-bold text-white">2</span>
-                    </div>
-                    <div className="mt-1 bg-slate-950/95 text-white border border-slate-800 text-[6.5px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap">
-                      🚻 안심 장애 화장실
-                    </div>
-                  </div>
-
-                  {/* View mode warning anchors */}
-                  {viewMode === 'hazard' && (
-                    <div 
-                      style={{ 
-                        left: '170px', 
-                        top: '105px',
-                        transform: `translate(-50%, -100%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
-                      }}
-                      className="absolute z-35 flex flex-col items-center pointer-events-none"
-                    >
-                      <div className="bg-red-950/95 text-red-100 border-2 border-red-500 px-3 py-1.5 rounded-2xl shadow-[0_0_24px_rgba(239,68,68,0.5)] flex flex-col items-center text-center animate-bounce">
-                        <AlertTriangle className="w-4 h-4 text-red-400 mb-0.5" />
-                        <span className="text-[7.5px] font-black uppercase text-red-400 tracking-wider">위험 물리 단차 탐지</span>
-                        <span className="text-[9px] font-black text-white whitespace-nowrap mt-0.5 leading-none">
-                          {selectedFloor === 4 ? '⚠️ 중앙 콘솔 뒤 케이블 보호대 턱' : 
-                           selectedFloor === 3 ? '⚠️ 야외 브리지 우천시 미끄럼 가속 부위' :
-                           selectedFloor === 2 ? '⚠️ 가이드라인 매표 차단막 주위' : 
-                           '⚠️ 혜화역 4번출구 전방 공사 요철 단차'}
-                        </span>
-                      </div>
-                      <div className="w-0.5 h-6 bg-red-500 border-dashed border-r border-red-400"></div>
-                      <div className="w-6 h-6 rounded-full border-2 border-red-500 bg-red-500/20 flex items-center justify-center animate-ping">
-                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {viewMode === 'radius' && (
-                    <div 
-                      style={{ 
-                        left: '130px', 
-                        top: '90px',
-                        transform: `translate(-50%, -50%)`
-                      }}
-                      className="absolute z-15 pointer-events-none"
-                    >
-                      <div className="w-16 h-16 rounded-full border-2 border-emerald-400 border-dashed bg-emerald-500/10 animate-spin" style={{ animationDuration: '6s' }}></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div 
-                          style={{ transform: `rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)` }}
-                          className="bg-slate-950/95 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[7px] font-black whitespace-nowrap shadow-lg"
-                        >
-                          ♿ 회전반경 1.4m 확보
+                  {/* 3D Billboards positioning (Mapped dynamically to each floor's checkpoints) */}
+                  {DETAILED_3D_FLOORS[selectedFloor]?.visualPathNodes?.map((node, idx) => {
+                    const pX = node.x * 3.4;
+                    const pY = node.y * 2.1;
+                    return (
+                      <div 
+                        key={idx}
+                        style={{ 
+                          left: `${pX}px`, 
+                          top: `${pY}px`,
+                          transform: `translate(-50%, -50%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
+                        }}
+                        className="absolute z-25 flex flex-col items-center pointer-events-none select-none transition-transform"
+                      >
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shadow-lg border border-white text-[7.5px] font-bold ${
+                          node.type === 'elevator' ? 'bg-cyan-550 text-slate-950 animate-pulse' :
+                          node.type === 'toilet' ? 'bg-emerald-500 text-white' :
+                          node.type === 'hazard' ? 'bg-red-500 text-white animate-bounce' :
+                          'bg-[#00E5FF] text-slate-950'
+                        }`}>
+                          {idx + 1}
+                        </div>
+                        <div className="mt-1 bg-slate-950/95 text-white border border-slate-800 text-[6.5px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                          {node.label}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
 
-                  {viewMode === 'default' && (
-                    <div 
-                      style={{ 
-                        left: '210px', 
-                        top: '120px',
-                        transform: `translate(-50%, -100%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
-                      }}
-                      className="absolute z-20 flex flex-col items-center pointer-events-none"
-                    >
-                      <div className="bg-cyan-950/95 text-[#00E5FF] border border-[#00E5FF]/40 px-2.5 py-1 rounded-xl shadow-[0_0_12px_rgba(0,229,255,0.25)] flex items-center gap-1">
-                        <span className="text-[10px]">♿</span>
-                        <span className="text-[9px] font-black text-white whitespace-nowrap">안심 권장 동선로</span>
+                  {/* Dynamic Hazard alert bouncing pin centered on actual hazard location */}
+                  {viewMode === 'hazard' && (() => {
+                    const hNode = DETAILED_3D_FLOORS[selectedFloor]?.visualPathNodes?.find(n => n.type === 'hazard');
+                    if (!hNode) return null;
+                    const hX = hNode.x * 3.4;
+                    const hY = hNode.y * 2.1;
+                    return (
+                      <div 
+                        style={{ 
+                          left: `${hX}px`, 
+                          top: `${hY}px`,
+                          transform: `translate(-50%, -100%) rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)`
+                        }}
+                        className="absolute z-35 flex flex-col items-center pointer-events-none"
+                      >
+                        <div className="bg-red-950/95 text-red-100 border-2 border-red-500 px-3 py-1.5 rounded-2xl shadow-[0_0_24px_rgba(239,68,68,0.5)] flex flex-col items-center text-center animate-bounce">
+                          <AlertTriangle className="w-4 h-4 text-red-400 mb-0.5" />
+                          <span className="text-[7.5px] font-black uppercase text-red-400 tracking-wider">위험 요철물 탐지</span>
+                          <span className="text-[9px] font-black text-white whitespace-nowrap mt-0.5 leading-none">
+                            {DETAILED_3D_FLOORS[selectedFloor].hazards.split('특정요철:')[1] || DETAILED_3D_FLOORS[selectedFloor].hazards.substring(0, 30)}
+                          </span>
+                        </div>
+                        <div className="w-0.5 h-6 bg-red-500 border-dashed border-r border-red-400"></div>
+                        <div className="w-6 h-6 rounded-full border-2 border-red-500 bg-red-500/20 flex items-center justify-center animate-ping">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                        </div>
                       </div>
-                      <div className="w-0.5 h-4 bg-cyan-400"></div>
-                    </div>
-                  )}
+                    );
+                  })()}
+
+                  {/* Circular visual turning radius marker */}
+                  {viewMode === 'radius' && (() => {
+                    const rNode = DETAILED_3D_FLOORS[selectedFloor]?.visualPathNodes?.[1] || { x: 50, y: 50 };
+                    const rX = rNode.x * 3.4;
+                    const rY = rNode.y * 2.1;
+                    return (
+                      <div 
+                        style={{ 
+                          left: `${rX}px`, 
+                          top: `${rY}px`,
+                          transform: `translate(-50%, -50%)`
+                        }}
+                        className="absolute z-15 pointer-events-none"
+                      >
+                        <div className="w-16 h-16 rounded-full border-2 border-emerald-400 border-dashed bg-emerald-500/10 animate-spin" style={{ animationDuration: '6s' }}></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div 
+                            style={{ transform: `rotateX(-${rotationX}deg) rotateZ(-${rotationZ}deg)` }}
+                            className="bg-slate-950/95 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[7px] font-black whitespace-nowrap shadow-lg"
+                          >
+                            ♿ 회전반경 1.4m 안전검측
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                 </div>
 
+              </div>
+
+              {/* Viewport helper info banner */}
+              <div className="text-[10px] font-mono text-slate-400 bg-slate-950/80 p-2 border border-slate-900 rounded-2xl text-center leading-relaxed max-w-lg mx-auto w-full z-10 flex flex-col sm:flex-row items-center justify-center gap-2">
+                <span className="text-cyan-400 font-bold">💡 S-MAP 뷰어 조작:</span>
+                <span className="text-center sm:text-left">
+                  {dragMode === 'rotate' ? '마우스 좌클릭 후 드래그 = 3D 각도 회전' : '마우스 좌클릭 후 드래그 = 도면 위치 이동(Pan)'} 
+                  <span className="text-zinc-600"> | </span> 
+                  휠 스크롤/모바일 핀치 = 돋보기 줌
+                </span>
               </div>
 
             </div>
