@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Accessibility, Settings, Mail, Lock, User, Info } from 'lucide-react';
+import { Accessibility, Settings, Mail, Lock, User, Info, Loader2 } from 'lucide-react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithPopup,
+  GoogleAuthProvider
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface LoginPortalProps {
   onLoginSuccess: (user: { email: string; name: string; userId: string; role: string }) => void;
@@ -12,6 +21,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Signup fields
   const [signupId, setSignupId] = useState('');
@@ -26,6 +36,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
   const [userEnteredCode, setUserEnteredCode] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [timer, setTimer] = useState(180);
+  const [checkingRealEmail, setCheckingRealEmail] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -37,52 +48,139 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     return () => clearInterval(interval);
   }, [isSentCode, timer, isVerified]);
 
-  const handleGoogleQuickLogin = () => {
-    // Simulates quick account detect
-    const quickEmail = "jiyoon6911@gmail.com";
-    const userObj = {
-      email: quickEmail,
-      name: "지윤",
-      userId: "jiyoon_403",
-      role: "장애인 당사자"
-    };
-    
-    localStorage.setItem(`user_profile_${quickEmail}`, JSON.stringify(userObj));
-    localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
-    onLoginSuccess(userObj);
+  // Real Google Sign In via Firebase
+  const handleGoogleQuickLogin = async () => {
+    setIsLoading(true);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const fUser = result.user;
+      if (!fUser || !fUser.email) {
+        throw new Error('구글 사용자 계정 취득에 실패했습니다.');
+      }
+
+      const emailStr = fUser.email;
+      const docRef = doc(db, 'users', emailStr);
+      let snap;
+      try {
+        snap = await getDoc(docRef);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.GET, `users/${emailStr}`);
+      }
+
+      let userObj;
+      if (snap && snap.exists()) {
+        userObj = snap.data();
+      } else {
+        const defaultId = emailStr.split('@')[0].replace(/[^a-z0-9_]/g, '');
+        userObj = {
+          userId: defaultId,
+          name: fUser.displayName || '무명 무벽 관객',
+          email: emailStr,
+          role: '장애인 당사자',
+        };
+        try {
+          await setDoc(docRef, userObj);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${emailStr}`);
+        }
+      }
+
+      localStorage.setItem(`user_profile_${emailStr}`, JSON.stringify(userObj));
+      localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
+      onLoginSuccess(userObj as any);
+    } catch (error) {
+      console.error('Google Popup Auth Error:', error);
+      alert('구글 로그인에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleManualLogin = (e: React.FormEvent) => {
+  // Real Email/Password login via Firebase Auth + Firestore profiles
+  const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailLogin.trim() || !passwordLogin) return;
+    setIsLoading(true);
 
-    const savedProfile = localStorage.getItem(`user_profile_${emailLogin.trim()}`);
-    if (!savedProfile) {
-      alert("가입되지 않은 이메일 주소입니다. 회원가입 탭에서 신규 등록해 주십시오.");
-      return;
+    try {
+      // 1. Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, emailLogin.trim(), passwordLogin);
+      const fUser = userCredential.user;
+
+      // 2. Load Firestore account
+      const docRef = doc(db, 'users', emailLogin.trim());
+      let snap;
+      try {
+        snap = await getDoc(docRef);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.GET, `users/${emailLogin.trim()}`);
+      }
+
+      let userObj;
+      if (snap && snap.exists()) {
+        userObj = snap.data();
+      } else {
+        const defaultId = emailLogin.split('@')[0].replace(/[^a-z0-9_]/g, '');
+        userObj = {
+          userId: defaultId,
+          name: fUser.displayName || '무명 무벽 관객',
+          email: emailLogin.trim(),
+          role: '장애인 당사자',
+        };
+        try {
+          await setDoc(docRef, userObj);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${emailLogin.trim()}`);
+        }
+      }
+
+      localStorage.setItem(`user_profile_${emailLogin.trim()}`, JSON.stringify(userObj));
+      localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
+      onLoginSuccess(userObj as any);
+    } catch (error) {
+      console.error('Email Login Error:', error);
+      alert('로그인에 실패했습니다. 이메일 또는 비밀번호를 다시 확인해주십시오: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsLoading(false);
     }
-
-    const userObj = JSON.parse(savedProfile);
-    if (userObj.password && userObj.password !== passwordLogin) {
-      alert("비밀번호가 일치하지 않습니다. 다시 입력해 주십시오.");
-      return;
-    }
-
-    localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
-    onLoginSuccess(userObj);
   };
 
-  const sendEmailCode = () => {
+  // Register unverified email + Send actual verification URL to user's real email!
+  const sendEmailCode = async () => {
     if (!signupEmail.trim() || !signupEmail.includes('@')) {
       alert("정상적인 메일 주소를 먼저 입력해 주십시오.");
       return;
     }
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setVerificationCode(code);
-    setIsSentCode(true);
-    setTimer(180);
-    setIsVerified(false);
-    alert(`📩 [BYPASS GATEWAY]\n보안 메일 시스템을 통해 [${signupEmail}] 주소로 6자리 인증 메일을 가상 발송 완료했습니다.`);
+    if (!signupPassword || signupPassword.length < 6) {
+      alert("비밀번호(비밀키)를 6자리 이상 기입한 후 전송해 주십시오.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Initialize Firebase user
+      const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.trim(), signupPassword);
+      const fUser = userCredential.user;
+      
+      // Request real Firebase verification email
+      await sendEmailVerification(fUser);
+
+      // Create fallback verification code for simulation bypass (if they are testing locally without real email)
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setVerificationCode(code);
+      setIsSentCode(true);
+      setTimer(180);
+      setIsVerified(false);
+
+      alert(`📩 [BYPASS & FIREBASE CORE]\n[${signupEmail}] 주소로 실제 이메일 인증용 확인 메일이 즉시 발송되었습니다!\n\n💡 (가상 환경 테스트 안내): 메일함 확인이 불가능하거나 가짜 메일인 경우, 아래의 보안 인증 통행 번호 [${code}]를 기입하여 즉시 검증 통과할 수도 있습니다.`);
+    } catch (error) {
+      console.error('Email registration send error:', error);
+      alert("인증 메일 전송 실패(이미 가입된 주소이거나 양식 오류): " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyCode = () => {
@@ -94,37 +192,69 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     }
   };
 
+  // Real-time check if user has verified via email link!
+  const checkRealEmailVerified = async () => {
+    if (!auth.currentUser) {
+      alert("인증 대기 세션이 분실되었습니다. 인증코드를 다시 전송해 주시기 바랍니다.");
+      return;
+    }
+
+    setCheckingRealEmail(true);
+    try {
+      await auth.currentUser.reload();
+      if (auth.currentUser.emailVerified) {
+        setIsVerified(true);
+        alert("🎉 실제 이메일 메일함 확인 완료! 정상적으로 가입이 승인되었습니다.");
+      } else {
+        alert("⏳ 아직 이메일 안의 인증 링크가 활성화되지 않았습니다. 메일함에서 링크를 클릭한 후 다시 시도해 주십시오.");
+      }
+    } catch (err) {
+      alert("인증 확인 과정에서 시간초과 혹은 서비스 전산 지연이 발생했습니다: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setCheckingRealEmail(false);
+    }
+  };
+
   const autoFillDemoCode = () => {
     setUserEnteredCode(verificationCode);
   };
 
-  const handleManualSignup = (e: React.FormEvent) => {
+  const handleManualSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const formattedId = signupId.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!formattedId || !signupName.trim() || !signupEmail.trim() || !signupPassword) return;
 
     if (!isVerified) {
-      alert("🚫 이메일 실재성 인증(인증번호 발송 및 점검 확인)을 먼저 완료해주셔야 회원 가입처리가 완료됩니다.");
+      alert("🚫 이메일 실재성 인증(가상 코드 번호 입력 혹은 실제 메일함 링크 클릭 후 확인)을 먼저 진행부탁드립니다.");
       return;
     }
 
-    const existing = localStorage.getItem(`user_profile_${signupEmail}`);
-    if (existing) {
-      alert("이미 사용 중인 이메일 주소입니다. 해당 계정으로 로그인해주시기 바랍니다.");
-      return;
+    setIsLoading(true);
+    try {
+      const newUser = {
+        userId: formattedId,
+        name: signupName.trim(),
+        email: signupEmail.trim(),
+        role: signupRole
+      };
+
+      // Save user record to Firestore
+      const docRef = doc(db, 'users', signupEmail.trim());
+      try {
+        await setDoc(docRef, newUser);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `users/${signupEmail.trim()}`);
+      }
+
+      localStorage.setItem(`user_profile_${signupEmail.trim()}`, JSON.stringify(newUser));
+      localStorage.setItem('bypass_logged_in_user', JSON.stringify(newUser));
+      onLoginSuccess(newUser);
+    } catch (error) {
+      console.error('Firebase profile save error:', error);
+      alert('회원가입 프로필 저장에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsLoading(false);
     }
-
-    const newUser = {
-      userId: formattedId,
-      name: signupName.trim(),
-      email: signupEmail.trim(),
-      password: signupPassword,
-      role: signupRole
-    };
-
-    localStorage.setItem(`user_profile_${signupEmail}`, JSON.stringify(newUser));
-    localStorage.setItem('bypass_logged_in_user', JSON.stringify(newUser));
-    onLoginSuccess(newUser);
   };
 
   const formatTime = (secs: number) => {
@@ -132,6 +262,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
+
 
   return (
     <div className={`fixed inset-0 z-50 overflow-y-auto bg-[#0a0f1d] flex flex-col justify-between p-6 ${highContrast ? 'high-contrast-mode' : ''}`}>
@@ -188,18 +319,23 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
           {/* Quick SSO */}
           {mode === 'login' && (
             <div className="space-y-2">
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block hc-text-mute">Google 간편 로그인 추천</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block hc-text-mute">Google 간편 로그인</span>
               <button
                 onClick={handleGoogleQuickLogin}
-                className="w-full py-3 px-4 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                <span>jiyoon6911@gmail.com 계정으로 즉시 시작</span>
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                ) : (
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                )}
+                <span>Google 계정으로 즉시 로그인</span>
               </button>
               <div className="flex items-center justify-between py-2 text-[10px] text-slate-500 hc-text-mute">
                 <span className="w-1/3 border-b border-slate-800"></span>
@@ -235,9 +371,11 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
               </div>
               <button
                 type="submit"
-                className="hc-button-primary w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-lg shadow-blue-500/20 transition-all"
+                disabled={isLoading}
+                className="hc-button-primary w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                로그인 완료
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>로그인 완료</span>
               </button>
             </form>
           ) : (
@@ -283,10 +421,11 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                   />
                   <button
                     type="button"
-                    disabled={isVerified}
+                    disabled={isVerified || isLoading}
                     onClick={sendEmailCode}
-                    className="text-[11px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/30 px-3 py-2 rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-secondary"
+                    className="text-[11px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/30 px-3 py-2 rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-secondary flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
+                    {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     인증번호 전송
                   </button>
                 </div>
@@ -296,11 +435,30 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
               {isSentCode && (
                 <div className="space-y-1.5 border border-slate-800/60 p-3 rounded-2xl bg-slate-950/40 hc-card">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">이메일 인증번호 입력</label>
-                    <span className={`text-[10px] font-bold font-mono ${timer <= 30 ? 'text-red-500 animate-pulse' : 'text-blue-405'}`}>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">메일 인증 완료 확인</label>
+                    <span className={`text-[10px] font-bold font-mono ${timer <= 30 ? 'text-red-500 animate-pulse' : 'text-blue-500'}`}>
                       {isVerified ? '인증 성공 ✅' : formatTime(timer)}
                     </span>
                   </div>
+
+                  {/* Option checking real email status */}
+                  {!isVerified && (
+                    <button
+                      type="button"
+                      onClick={checkRealEmailVerified}
+                      disabled={checkingRealEmail}
+                      className="w-full py-2 mb-1.5 rounded-xl bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30 border border-cyan-500/30 font-bold text-[10px] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {checkingRealEmail ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>실시간 메일함 확인 중...</span>
+                        </>
+                      ) : (
+                        <span>📬 [실제 가입] 메일함에서 링크 클릭 완료 후 본인확인</span>
+                      )}
+                    </button>
+                  )}
 
                   <div className="flex gap-2">
                     <input
@@ -316,19 +474,19 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                       type="button"
                       disabled={isVerified}
                       onClick={handleVerifyCode}
-                      className="text-[10px] font-bold text-white bg-blue-600 px-3.5 py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-primary"
+                      className="text-[10px] font-bold text-white bg-blue-600 px-3.5 py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-primary cursor-pointer"
                     >
-                      {isVerified ? '완료' : '인증 확인'}
+                      {isVerified ? '완료' : '가상코드 인증'}
                     </button>
                   </div>
 
                   {!isVerified && (
                     <div className="text-[9px] text-yellow-400 font-bold p-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-between gap-1 mt-1">
-                      <span>📧 [가상 알림] 인증코드: <span className="font-mono text-xs text-white">{verificationCode}</span></span>
+                      <span>📧 [가상 알림] 가상코드: <span className="font-mono text-xs text-white">{verificationCode}</span></span>
                       <button
                         type="button"
                         onClick={autoFillDemoCode}
-                        className="text-[8px] bg-yellow-405 text-slate-950 px-1.5 py-0.5 rounded font-black hover:bg-yellow-300 transition-all font-sans"
+                        className="text-[8px] bg-yellow-550 text-slate-950 px-1.5 py-0.5 rounded font-black hover:bg-yellow-300 transition-all font-sans cursor-pointer"
                       >
                         자동입력
                       </button>

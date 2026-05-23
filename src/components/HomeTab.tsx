@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Award, Megaphone } from 'lucide-react';
+import { Sparkles, Award, Megaphone, Search, X } from 'lucide-react';
 import { Show } from '../types';
 import { SHOWS_DATA } from '../data';
 
@@ -12,12 +12,25 @@ interface HomeTabProps {
 export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: HomeTabProps) {
   const [selectedGenre, setSelectedGenre] = useState('전체');
   const [isSupporterRegistered, setIsSupporterRegistered] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const genres = ['전체', '연극', '뮤지컬', '콘서트'];
 
-  const filteredShows = selectedGenre === '전체'
-    ? SHOWS_DATA
-    : SHOWS_DATA.filter(s => s.genre === selectedGenre);
+  const filteredShows = SHOWS_DATA.filter(show => {
+    // 1. Genre filter
+    const matchesGenre = selectedGenre === '전체' || show.genre === selectedGenre;
+    // 2. Search query filter
+    const lowerQuery = searchQuery.trim().toLowerCase();
+    if (!lowerQuery) return matchesGenre;
+
+    const matchesSearch = 
+      show.title.toLowerCase().includes(lowerQuery) ||
+      show.facility.toLowerCase().includes(lowerQuery) ||
+      show.tags.some(t => t.toLowerCase().includes(lowerQuery)) ||
+      show.genre.toLowerCase().includes(lowerQuery);
+
+    return matchesGenre && matchesSearch;
+  });
 
   const handleGenreClick = (genre: string) => {
     setSelectedGenre(genre);
@@ -45,6 +58,34 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
           <p className="text-xs text-slate-300 leading-relaxed hc-text-mute">
             계단 없는 좌석 진입 경로, 배리어프리 해설, 그리고 실시간 동행 자막 수신기 혜택을 즉시 받아보세요.
           </p>
+        </div>
+      </div>
+
+      {/* Modern Search bar */}
+      <div className="space-y-2 text-left bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+        <label className="hc-accent text-[11px] font-black tracking-wide text-blue-400 uppercase block flex items-center gap-1.5">
+          <Search className="w-3.5 h-3.5 text-blue-400" />
+          무장벽 맞춤형 공연 통합 검색
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="공연 제목, 극장명, 또는 배리어프리 키워드 입력..."
+            className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800/80 pl-3 pr-10 py-2.5 focus:border-blue-500 focus:outline-none hc-card font-semibold placeholder-slate-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                onAnnounce('검색 필터를 초기화해 전체 공연 목록으로 환원했습니다.');
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

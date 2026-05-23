@@ -30,6 +30,7 @@ export default function VisibilityTab({
   const [isGlassesSchedulerOpen, setIsGlassesSchedulerOpen] = useState(false);
   const [glassesDate, setGlassesDate] = useState('5월 24일');
   const [glassesTime, setGlassesTime] = useState('12:00');
+  const [glassesVenue, setGlassesVenue] = useState('아르코예술극장 대극장');
 
   // helper to toggle assistance options
   const toggleOpt = (name: string) => {
@@ -72,14 +73,14 @@ export default function VisibilityTab({
       type: 'glass',
       date: glassesDate,
       time: glassesTime,
-      detail: '🕶️ AR 실시간 무대 한글 해설 스마트 자막 안경 대여',
-      note: '공연장 입장 40분 전 수령 카운터 배리어프리 전용 데스크 인증 필증',
+      detail: `🕶️ [${glassesVenue}] AR 무대 한글 해설 스마트 자막 안경 대여`,
+      note: `공연장 입장 40분 전 수령 카운터 배리어프리 전용 데스크 본인 수령`,
     };
 
     onAddBooking(newBooking);
     setIsGlassesSchedulerOpen(false);
-    alert(`스마트 자막 안경 대여 예약이 완료되었습니다!\n\n일시: ${glassesDate} ${glassesTime}\n수령 카운터: 1층 배리어프리 임대 데스크`);
-    onAnnounce(`스마트 자막 안경 현장 대여 예약 완료: ${glassesDate} ${glassesTime}`);
+    alert(`스마트 자막 안경 대여 예약이 완료되었습니다!\n\n수령지: [${glassesVenue}]\n일시: ${glassesDate} ${glassesTime}\n수령 카운터: 1층 배리어프리 임대 데스크`);
+    onAnnounce(`스마트 자막 안경 현장 대여 예약 완료: ${glassesVenue} - ${glassesDate} ${glassesTime}`);
   };
 
   return (
@@ -270,7 +271,7 @@ export default function VisibilityTab({
               {/* Trigger */}
               <button
                 onClick={handleManagerBook}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <CheckCircle className="w-4 h-4" />
                 <span>{managerDate} {managerTime} 매니저 예약 확정</span>
@@ -281,39 +282,52 @@ export default function VisibilityTab({
       </div>
 
       {/* Smart Glasses Block */}
-      <div className="hc-card rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3 text-left">
+      <div className="hc-card rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-4 text-left">
         <div className="space-y-1">
           <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-black tracking-wider uppercase hc-badge">
             증강 현실 보완
           </span>
           <h4 className="text-sm font-extrabold text-slate-100 flex items-center gap-1.5 pt-1">
             <Glasses className="w-4 h-4 text-cyan-400" />
-            AI 자막안경 현장 대여
+            AI 자막안경 현장 대여 신청
           </h4>
           <p className="text-xs text-slate-400 leading-normal font-semibold">
             무대 위 실제 연기자 동선에서 시선을 뗄 필요 없이, AR 투명 글래스로 한국어 폐쇄 형 자막을 편안히 수신해 보세요.
           </p>
         </div>
 
-        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase leading-none hc-text-mute">실시간 대여 가능 장비</span>
-            <p className="text-xs font-extrabold text-white">총 여유분 : 11기 보전 (대기팀: 1팀)</p>
-          </div>
-          <span className="hc-badge text-[9px] font-bold px-2 py-0.5 bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 rounded">
-            즉시 대여 가증
-          </span>
+        {/* 1. Venue selection (어디에서 빌릴건지) */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block hc-text">
+            📍 1단계: 수령 및 대여 공연장 선택
+          </label>
+          <select
+            value={glassesVenue}
+            onChange={(e) => {
+              setGlassesVenue(e.target.value);
+              onAnnounce(`AR 안경 대여 수령장소를 ${e.target.value}로 지정 조정했습니다.`);
+            }}
+            className="w-full text-xs font-semibold bg-slate-950 text-white rounded-xl border border-slate-800 px-3 py-2.5 focus:border-cyan-500 focus:outline-none hc-card"
+          >
+            <option value="아르코예술극장 대극장">아르코예술극장 대극장 (대학로)</option>
+            <option value="아르코예술극장 소극장">아르코예술극장 소극장 (대학로)</option>
+            <option value="대학로예술극장 대극장">대학로예술극장 대극장 (대학로)</option>
+            <option value="대학로예술극장 소극장">대학로예술극장 소극장 (대학로)</option>
+            <option value="국립극장 해오름극장">국립극장 해오름극장 (동대입구)</option>
+            <option value="세종문화회관 대극장">세종문화회관 대극장 (광화문)</option>
+          </select>
         </div>
 
+        {/* 2. Scheduler Trigger */}
         <button
           onClick={() => {
             setIsGlassesSchedulerOpen(!isGlassesSchedulerOpen);
             setIsManagerSchedulerOpen(false);
           }}
-          className="hc-button-secondary w-full py-2.5 rounded-xl bg-slate-950 border border-cyan-500/30 text-cyan-450 hover:bg-cyan-500/10 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+          className="hc-button-secondary w-full py-2.5 rounded-xl bg-slate-950 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <Clock className="w-4 h-4" />
-          <span>기기 대여 가능 시간 조회</span>
+          <span>📅 2단계: 대여 일정 및 실시간 시간 정제 ({glassesDate} {glassesTime})</span>
         </button>
 
         {/* Glasses Calendar scheduler */}
@@ -322,13 +336,13 @@ export default function VisibilityTab({
             <div className="flex items-center justify-between">
               <h4 className="text-[11px] font-black text-cyan-400 flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                스마트 자막안경 실시간 대여 스케줄러
+                언제 & 몇 시 대여 일정 선택
               </h4>
             </div>
 
             {/* Calendar */}
             <div className="space-y-1.5">
-              <span className="text-[9px] text-slate-500 font-bold block font-sans">1. 희망 수령 대여 날짜 선택 (5월)</span>
+              <span className="text-[9px] text-slate-500 font-bold block font-sans">희망 수령 날짜 (5월 중 택일)</span>
               <div className="bg-slate-950 border border-slate-900 p-2 rounded-xl text-center">
                 <div className="grid grid-cols-7 text-[8px] font-black text-slate-500 pb-1 border-b border-slate-900">
                   <div className="text-rose-500">일</div>
@@ -374,7 +388,7 @@ export default function VisibilityTab({
 
             {/* Time selection */}
             <div className="space-y-1.5">
-              <span className="text-[9px] text-slate-500 font-bold block">2. 희망 기기 대여 타임 선택</span>
+              <span className="text-[9px] text-slate-500 font-bold block font-sans">수령 대여 예정 시간 (공연 40분 전 권장)</span>
               <div className="grid grid-cols-2 gap-2">
                 {['12:00', '14:30', '17:00', '19:30'].map((time) => {
                   const isSelected = glassesTime === time;
@@ -410,50 +424,68 @@ export default function VisibilityTab({
 
             <button
               onClick={handleGlassesBook}
-              className="w-full py-2.5 bg-cyan-650 hover:bg-cyan-705 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Check className="w-4 h-4 font-black" />
-              <span>{glassesDate} {glassesTime} 자막안경 대여 확정</span>
+              <span>{glassesDate} {glassesTime} 자막안경 임대정보 확정하기</span>
             </button>
           </div>
         )}
+
+        {/* Quick Instant Rental Trigger if closed */}
+        {!isGlassesSchedulerOpen && (
+          <button
+            onClick={handleGlassesBook}
+            className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>선택한 [{glassesVenue}] 극장에서 자막안경 즉시 신청하기</span>
+          </button>
+        )}
       </div>
 
-      {/* Active Reservational Output History Displays */}
-      <div className="space-y-2 mt-4 text-left">
-        <div className="flex items-center justify-between pl-1">
-          <h3 className="text-xs font-black text-slate-300 tracking-wider flex items-center gap-1.5">
-            <BookmarkCheck className="w-4 h-4 text-cyan-400" />
-            나의 실시간 예매/대여 예약 완료 현황
-          </h3>
-          <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-bold font-mono hc-badge">
-            {bookings.length}건 완료됨
+      {/* Visually Separated Core Block of User Completed Bookings */}
+      <div className="pt-6 border-t-2 border-dashed border-slate-800/80 mt-6"></div>
+
+      <div className="hc-card rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/20 p-4 space-y-4 text-left shadow-xl shadow-slate-950/50">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/60">
+          <div className="space-y-0.5">
+            <span className="text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-black tracking-wider uppercase hc-badge inline-block">
+              실시간 상태 관리 보드
+            </span>
+            <h3 className="text-sm font-black text-white tracking-tight flex items-center gap-1.5 pt-1">
+              <BookmarkCheck className="w-4 h-4 text-emerald-400" />
+              나의 실시간 예매/대여 예약 완료 현황
+            </h3>
+          </div>
+          <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full font-bold font-mono">
+            총 {bookings.length}건
           </span>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {bookings.length === 0 ? (
-            <div className="p-6 text-center border border-dashed border-slate-805 rounded-2xl bg-slate-950/40 space-y-2">
+            <div className="p-6 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/40 space-y-2">
               <CalendarPlus className="w-8 h-8 text-slate-600 mx-auto" />
-              <p className="text-xs text-slate-500 font-extrabold">대기 및 실시간 확정된 매칭/대여 예약이 존재하지 않습니다.</p>
-              <p className="text-[10px] text-slate-500 hc-text-mute">위 스케줄러를 펼쳐 마음에 드는 시간대를 지정 신청해 주시기 바랍니다.</p>
+              <p className="text-xs text-slate-400 font-extrabold hc-text">대기 및 실시간 확정된 매칭/대여 예약이 존재하지 않습니다.</p>
+              <p className="text-[10px] text-slate-500 hc-text-mute">위 스케줄러에서 원하시는 극장, 날짜 및 시간을 조합 입력 신청해 주십시오.</p>
             </div>
           ) : (
             bookings.map((b) => {
               const isManager = b.type === 'manager';
-              const typeLabel = isManager ? '동행 매니저' : 'AR 자막안경';
+              const typeLabel = isManager ? '동행 매니저 1:1 안심매칭' : 'AR 자막안경 스마트 대여';
               const labelBg = isManager
-                ? 'bg-blue-600/10 border-blue-500/30 text-blue-400'
-                : 'bg-cyan-600/10 border-cyan-500/30 text-cyan-400';
+                ? 'bg-blue-600/15 border-blue-500/40 text-blue-400'
+                : 'bg-cyan-600/15 border-cyan-500/40 text-cyan-400';
 
               return (
                 <div
                   key={b.id}
-                  className="hc-card border border-slate-800 rounded-2xl p-3.5 bg-slate-900/60 flex flex-col justify-between gap-3 shadow shadow-blue-500/[0.02]"
+                  className="hc-card border border-slate-800/80 rounded-2xl p-3.5 bg-slate-900/40 flex flex-col justify-between gap-3 shadow shadow-blue-500/[0.01]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2">
-                      <span className="p-1.5 rounded-xl bg-slate-950 text-slate-350 shrink-0 mt-0.5">
+                      <span className="p-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 shrink-0 mt-0.5">
                         {isManager ? (
                           <Users className="w-4 h-4 text-blue-400" />
                         ) : (
@@ -462,26 +494,26 @@ export default function VisibilityTab({
                       </span>
                       <div className="space-y-0.5 text-left">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-black text-white">{typeLabel} 예약확정</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border uppercase ${labelBg} hc-badge`}>
+                          <span className="text-xs font-black text-white">{typeLabel}</span>
+                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-bold border uppercase ${labelBg} hc-badge`}>
                             {b.date} {b.time}
                           </span>
                         </div>
-                        <p className="text-[11px] font-bold text-slate-300">{b.detail}</p>
+                        <p className="text-[11px] font-bold text-slate-205">{b.detail}</p>
                       </div>
                     </div>
 
                     <button
                       onClick={() => onCancelBooking(b.id)}
-                      className="text-[10px] text-rose-455 bg-rose-400/10 border border-rose-500/20 hover:bg-rose-400/20 active:scale-95 px-2.5 py-1 rounded-lg transition-all font-bold whitespace-nowrap shrink-0 hc-button-secondary"
+                      className="text-[10px] text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 active:scale-95 px-2.5 py-1 rounded-xl transition-all font-bold whitespace-nowrap shrink-0 hc-button-secondary cursor-pointer"
                     >
                       예약 취소
                     </button>
                   </div>
 
-                  <div className="p-2 bg-slate-950/80 rounded-xl border border-slate-900 flex justify-between items-center text-[9.5px]">
-                    <span className="text-slate-500 font-bold hc-text-mute">전달사항:</span>
-                    <span className="text-slate-400 truncate max-w-[210px] font-semibold">{b.note}</span>
+                  <div className="p-2 bg-slate-950/80 rounded-xl border border-slate-900/60 flex justify-between items-center text-[9.5px]">
+                    <span className="text-slate-500 font-bold hc-text-mute">전달 보존안내:</span>
+                    <span className="text-slate-300 truncate max-w-[210px] font-semibold">{b.note}</span>
                   </div>
                 </div>
               );

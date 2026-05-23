@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Home, Map, Calendar, Ticket, User, Settings, Accessibility } from 'lucide-react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './lib/firebase';
 
 import { Show, Booking, Ticket as TicketType, ReviewLog } from './types';
 import { SHOWS_DATA, INITIAL_GLOBAL_REVIEWS } from './data';
@@ -47,11 +50,37 @@ export default function App() {
 
   // 1. Initial State Hooks
   useEffect(() => {
-    // Check logged in user
+    // Check logged in user locally first for zero-latency initial paint
     const loggedUser = localStorage.getItem('bypass_logged_in_user');
     if (loggedUser) {
       setCurrentUser(JSON.parse(loggedUser));
     }
+
+    // Subscribe to real-time Firebase Auth session state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser && firebaseUser.email) {
+        const emailStr = firebaseUser.email;
+        const docRef = doc(db, 'users', emailStr);
+        try {
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const userObj = snap.data();
+            setCurrentUser(userObj as any);
+            localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
+          } else {
+            // Profile fallback
+            const savedProfile = localStorage.getItem(`user_profile_${emailStr}`);
+            if (savedProfile) {
+              const userObj = JSON.parse(savedProfile);
+              setCurrentUser(userObj);
+              localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
+            }
+          }
+        } catch (error) {
+          console.error("Error loaded firebase user document:", error);
+        }
+      }
+    });
 
     // Load active bookings
     const bookings = localStorage.getItem('bypass_active_bookings');
@@ -102,6 +131,8 @@ export default function App() {
     if (sTickets) {
       setSyncedTickets(JSON.parse(sTickets));
     }
+
+    return () => unsubscribe();
   }, []);
 
   // Update root classes for font scale
@@ -151,8 +182,13 @@ export default function App() {
     handleAnnounce(`${userObj.name} 님이 안전하게 검증 패싱 로그인 성공 완료되었습니다.`);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm("정말로 로그아웃하여 세션을 안전하게 반환 하시겠습니까?")) {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error("Firebase Signout Error:", error);
+      }
       localStorage.removeItem('bypass_logged_in_user');
       setCurrentUser(null);
       setActiveTab('home');
@@ -403,10 +439,7 @@ export default function App() {
         </main>
       )}
 
-      {/* 4. Voice Console overlay */}
-      {currentUser && (
-        <VoiceConsole text={activeVoiceText} isVisible={showVoiceConsole} />
-      )}
+      {/* 4. Voice Console overlay removed as requested */}
 
       {/* 5. Bottom Navigation Menu */}
       {currentUser && (
