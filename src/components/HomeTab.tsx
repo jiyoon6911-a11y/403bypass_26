@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Award, Megaphone, Search, X } from 'lucide-react';
+import { Sparkles, Award, Megaphone, Search, X, Mic, Eye } from 'lucide-react';
 import { Show } from '../types';
 import { SHOWS_DATA } from '../data';
 
@@ -13,15 +13,27 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
   const [selectedGenre, setSelectedGenre] = useState('전체');
   const [isSupporterRegistered, setIsSupporterRegistered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
 
-  const genres = ['전체', '연극', '뮤지컬', '콘서트'];
+  const genres = ['전체', '뮤지컬', '연극', '콘서트'];
+
+  const tagFilters = [
+    { label: '휠체어 접근', tag: '휠체어석', icon: '♿', color: 'text-cyan-400' },
+    { label: '자막 제공', tag: '자막제공', icon: '💬', color: 'text-cyan-400' },
+    { label: '음성 해설', tag: '음성설명', icon: '🎙️', color: 'text-cyan-400' },
+    { label: '수어 통역', tag: '수어통역', icon: '👁️', color: 'text-cyan-400' }
+  ];
 
   const filteredShows = SHOWS_DATA.filter(show => {
     // 1. Genre filter
     const matchesGenre = selectedGenre === '전체' || show.genre === selectedGenre;
-    // 2. Search query filter
+    
+    // 2. Barrier-free tag filter
+    const matchesTag = !selectedTagFilter || show.tags.includes(selectedTagFilter);
+
+    // 3. Search query filter
     const lowerQuery = searchQuery.trim().toLowerCase();
-    if (!lowerQuery) return matchesGenre;
+    if (!lowerQuery) return matchesGenre && matchesTag;
 
     const matchesSearch = 
       show.title.toLowerCase().includes(lowerQuery) ||
@@ -29,12 +41,22 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
       show.tags.some(t => t.toLowerCase().includes(lowerQuery)) ||
       show.genre.toLowerCase().includes(lowerQuery);
 
-    return matchesGenre && matchesSearch;
+    return matchesGenre && matchesTag && matchesSearch;
   });
 
   const handleGenreClick = (genre: string) => {
     setSelectedGenre(genre);
     onAnnounce(`예술 장르 필터를 [${genre}] 예술 군으로 성공적으로 재정합하였습니다.`);
+  };
+
+  const handleTagFilterClick = (tag: string) => {
+    if (selectedTagFilter === tag) {
+      setSelectedTagFilter(null);
+      onAnnounce("무장벽 태그 필터를 해제하여 전체 목록으로 원복하였습니다.");
+    } else {
+      setSelectedTagFilter(tag);
+      onAnnounce(`[${tag}] 지원 가능 조건으로 공연을 필터링합니다.`);
+    }
   };
 
   const handleSupporterApply = () => {
@@ -43,79 +65,86 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
   };
 
   return (
-    <div className="space-y-4">
-      {/* Hero Banner */}
-      <div className="hc-card rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 p-4 border border-slate-800 relative overflow-hidden shadow-xl">
-        <div className="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
-          <Sparkles className="w-48 h-48 text-blue-400" />
-        </div>
-        <div className="relative z-10 space-y-2">
-          <span className="hc-badge inline-flex items-center gap-1.5 text-[9px] font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 rounded-full px-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-            오늘의 보인(BOIN) 추천작
-          </span>
-          <h2 className="text-lg font-black tracking-tight leading-snug">공연장 403호 매끄러운 진입로 안내 가이드 탑재</h2>
-          <p className="text-xs text-slate-300 leading-relaxed hc-text-mute">
-            계단 없는 좌석 진입 경로, 배리어프리 해설, 그리고 실시간 동행 자막 수신기 혜택을 즉시 받아보세요.
-          </p>
-        </div>
-      </div>
-
-      {/* Modern Search bar */}
-      <div className="space-y-2 text-left bg-slate-900 border border-slate-800 p-3 rounded-2xl">
-        <label className="hc-accent text-[11px] font-black tracking-wide text-blue-400 uppercase block flex items-center gap-1.5">
-          <Search className="w-3.5 h-3.5 text-blue-400" />
-          무장벽 맞춤형 공연 통합 검색
-        </label>
-        <div className="relative">
+    <div className="space-y-5">
+      
+      {/* 2. Modern Search bar - Styled exactly as the mockup screenshot */}
+      <div className="relative pt-1">
+        <div className="relative flex items-center bg-[#121214] border border-[#212124] rounded-3xl px-4 py-2 shadow-lg w-full">
+          <Search className="w-5 h-5 text-[#00E5FF] mr-3 shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="공연 제목, 극장명, 또는 배리어프리 키워드 입력..."
-            className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800/80 pl-3 pr-10 py-2.5 focus:border-blue-500 focus:outline-none hc-card font-semibold placeholder-slate-500"
+            placeholder="어떤 공연을 찾으시나요?"
+            className="w-full text-sm bg-transparent text-white focus:outline-none placeholder-slate-500 font-semibold pr-8"
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button
               onClick={() => {
                 setSearchQuery('');
                 onAnnounce('검색 필터를 초기화해 전체 공연 목록으로 환원했습니다.');
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white"
+              className="absolute right-12 p-1 text-slate-400 hover:text-white"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
-          )}
+          ) : null}
+          <button 
+            onClick={() => onAnnounce("실시간 보행 음성 보이스 탐색 엔진을 로드하고 있습니다.")}
+            className="p-1 px-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 transition-all text-[#00E5FF] flex items-center justify-center shrink-0 cursor-pointer"
+            title="음성 검색"
+          >
+            <Mic className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Genre Selection Grid */}
-      <div className="space-y-2 text-left">
-        <label className="hc-accent text-xs font-black tracking-wide text-blue-400 uppercase block">
-          🎭 선호 예술 장르 선택
-        </label>
-        <div className="grid grid-cols-4 gap-2">
-          {genres.map((g) => (
+      {/* 1. Genre Selection Grid - Category pills styled exactly as the mockup screenshot */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+        {genres.map((g) => {
+          const isSelected = selectedGenre === g;
+          return (
             <button
               key={g}
               onClick={() => handleGenreClick(g)}
-              className={`py-1.5 text-xs font-bold rounded-lg transition-all text-center border ${
-                selectedGenre === g
-                  ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/10'
-                  : 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800'
+              className={`py-2 px-6 rounded-2xl text-xs font-black tracking-tight transition-all text-center whitespace-nowrap cursor-pointer border ${
+                isSelected
+                  ? 'bg-[#00E5FF] text-black border-[#00E5FF] shadow-lg shadow-[#00E5FF]/20'
+                  : 'border-[#212124] bg-[#121214] text-slate-350 hover:bg-[#1c1c20]'
               }`}
             >
               {g}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Active Performance Cards */}
-      <div className="space-y-3">
+      {/* 2.5 Quick Accessibility filter pill row - matching mockup row perfectly */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {tagFilters.map((tf) => {
+          const isSelected = selectedTagFilter === tf.tag;
+          return (
+            <button
+              key={tf.tag}
+              onClick={() => handleTagFilterClick(tf.tag)}
+              className={`py-2 px-3.5 rounded-xl text-[10.5px] font-bold tracking-tight transition-all flex items-center gap-1.5 border whitespace-nowrap cursor-pointer ${
+                isSelected
+                  ? 'bg-blue-950/80 text-[#00E5FF] border-[#00E5FF]'
+                  : 'bg-[#121214] text-slate-300 border-[#1a1a1d] hover:bg-[#1a1a1d]'
+              }`}
+            >
+              <span className={`text-xs ${tf.color}`}>{tf.icon}</span>
+              <span>{tf.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Performance Cards Section */}
+      <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h3 className="hc-accent text-xs font-black text-slate-305 tracking-wide uppercase flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-cyan-400" />
+          <h3 className="text-xs font-black text-slate-300 tracking-wide uppercase flex items-center gap-1.5">
+            <Award className="w-4 h-4 text-[#00E5FF]" />
             맞춤 장애인 지원 완비 공연 목록
           </h3>
           <span className="text-[10px] text-slate-500 font-bold count-badge">
@@ -124,100 +153,142 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
         </div>
 
         <div className="space-y-3">
-          {filteredShows.map((show) => {
-            const indexColorClass = show.score >= 90
-              ? 'text-green-400'
-              : show.score >= 60
-              ? 'text-cyan-400'
-              : 'text-yellow-405';
-
-            return (
-              <div
-                key={show.id}
-                className="hc-card bg-slate-900 border border-slate-800/80 rounded-2xl overflow-hidden flex flex-col hover:border-slate-700 transition-all shadow-md"
+          {filteredShows.length === 0 ? (
+            <div className="bg-[#121214] border border-[#212124] rounded-2xl p-8 text-center text-slate-500">
+              <p className="text-xs font-bold">선택하신 조건에 부합하는 공연정보가 없습니다.</p>
+              <button 
+                onClick={() => {
+                  setSelectedGenre('전체');
+                  setSelectedTagFilter(null);
+                  setSearchQuery('');
+                }}
+                className="text-[10px] text-[#00E5FF] mt-2 underline font-bold cursor-pointer"
               >
-                <div className="flex">
-                  <img
-                    src={show.image}
-                    alt={show.title}
-                    className="w-24 h-24 object-cover filter brightness-90 shrink-0"
-                  />
-                  <div className="p-3 flex-1 flex flex-col justify-between text-left">
-                    <div className="space-y-0.5">
-                      <div className="flex justify-between items-start gap-1">
-                        <span className="hc-badge inline-flex items-center text-[7px] bg-blue-500/10 text-cyan-400 font-bold px-1.5 py-0.5 rounded-full border border-cyan-500/20">
-                          {show.genre}
-                        </span>
-                        <span className="text-[9px] font-mono text-slate-400 truncate max-w-[140px]">{show.facility}</span>
-                      </div>
-                      <h4
-                        onClick={() => onShowSelect(show)}
-                        className="text-xs font-black text-white hover:text-blue-400 cursor-pointer line-clamp-1 leading-snug"
-                      >
-                        {show.title}
-                      </h4>
-                    </div>
+                전체 조건으로 필터 리셋
+              </button>
+            </div>
+          ) : (
+            filteredShows.map((show) => {
+              const indexColorClass = show.score >= 90
+                ? 'text-emerald-400 animate-pulse'
+                : show.score >= 60
+                ? 'text-[#00E5FF]'
+                : 'text-amber-400';
 
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex flex-wrap gap-1">
-                        {show.tags.map((t, idx) => (
-                          <span
-                            key={idx}
-                            className="hc-badge px-1.5 py-0.5 rounded text-[8px] bg-slate-800 text-slate-300 border border-slate-705 font-bold tracking-tight"
-                          >
-                            {t}
+              return (
+                <div
+                  key={show.id}
+                  className="bg-[#121214] border border-[#212124] rounded-2xl overflow-hidden flex flex-col hover:border-[#303036] transition-all shadow-md active:scale-[0.99]"
+                >
+                  <div className="flex">
+                    <img
+                      src={show.image}
+                      alt={show.title}
+                      className="w-24 h-24 object-cover filter brightness-95 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="p-3 flex-1 flex flex-col justify-between text-left">
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between items-start gap-1">
+                          <span className="inline-flex items-center text-[7px] bg-[#00E5FF]/10 text-[#00E5FF] font-bold px-1.5 py-0.5 rounded-full border border-[#00E5FF]/20">
+                            {show.genre}
                           </span>
-                        ))}
+                          <span className="text-[9px] font-mono text-slate-400 truncate max-w-[140px]">{show.facility}</span>
+                        </div>
+                        <h4
+                          onClick={() => onShowSelect(show)}
+                          className="text-xs font-black text-white hover:text-[#00E5FF] cursor-pointer line-clamp-1 leading-snug transition-colors"
+                        >
+                          {show.title}
+                        </h4>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-[8px] text-slate-500 block uppercase font-mono tracking-widest hc-text-mute">
-                          무벽안심지수
-                        </span>
-                        <span className={`text-xs font-black ${indexColorClass}`}>
-                          {show.score}%
-                        </span>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex flex-wrap gap-1">
+                          {show.tags.map((t, idx) => {
+                            const isCurrentTagActive = selectedTagFilter === t;
+                            return (
+                              <span
+                                key={idx}
+                                className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-tight border capitalize ${
+                                  isCurrentTagActive 
+                                    ? 'bg-[#00E5FF]/15 text-[#00E5FF] border-[#00E5FF]/30' 
+                                    : 'bg-[#1a1a1d] text-slate-300 border-[#222226]'
+                                }`}
+                              >
+                                {t}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[8px] text-slate-500 block uppercase font-mono tracking-widest hc-text-mute">
+                            무벽안심지수
+                          </span>
+                          <span className={`text-xs font-black ${indexColorClass}`}>
+                            {show.score}%
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Supporters Campaign Banner */}
-      <div className="hc-card rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3 text-left">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5">
-              <span className="p-1 px-1.5 text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded font-bold uppercase hc-badge">
-                지원
-              </span>
-              403 바이패스 서포터즈 1기
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed hc-text-mute">
-              휠체어 좌석 진입로 경사로 체크 및 이동 취약 관객을 위한 길잡이 요원이 되어주세요.
+      {/* Hero Banner - Overridden and styled precisely matching the stunning Cyan Supporter Recruitment Billboard in mockup */}
+      <div className="rounded-[2rem] bg-[#00E5FF] p-6 text-black relative overflow-hidden shadow-2xl flex flex-col justify-between aspect-[1.4/1] text-left">
+        
+        {/* Subtle abstract background eye icon tracing */}
+        <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-12 translate-y-12">
+          <Eye className="w-56 h-56 text-[#009cb0]" strokeWidth={2.5} referrerPolicy="no-referrer" />
+        </div>
+
+        {/* Top tag badge */}
+        <div>
+          <span className="inline-block px-3 py-1 bg-black text-[#00E5FF] text-[10px] font-black rounded-lg uppercase tracking-wider mb-4">
+            공식 홍보대사
+          </span>
+          
+          {/* Main big display block */}
+          <div className="space-y-1.5">
+            <h2 className="text-[26px] font-black tracking-tight leading-none text-black font-sans">
+              403 서포터즈
+            </h2>
+            <h2 className="text-[26px] font-black tracking-tight leading-none text-black font-sans">
+              1기 대모집!
+            </h2>
+            <p className="text-xs text-black/80 font-bold leading-normal font-sans pt-1">
+              접근성 리뷰하고 리워드 받자
             </p>
           </div>
         </div>
-        
-        <button
-          onClick={handleSupporterApply}
-          disabled={isSupporterRegistered}
-          className={`hc-button-primary w-full py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${
-            isSupporterRegistered
-              ? 'bg-slate-950 border border-green-500/40 text-green-300 cursor-default'
-              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-          }`}
-        >
-          <Megaphone className="w-4 h-4" />
-          <span>
-            {isSupporterRegistered
-              ? '서포터즈 접수 완료 (근접 뱃지 획득!)'
-              : '서포터즈 활동 지원하기 (리워드 시상)'}
-          </span>
-        </button>
+
+        {/* Action interactive button shape */}
+        <div className="pt-4 relative z-10">
+          <button
+            onClick={handleSupporterApply}
+            disabled={isSupporterRegistered}
+            className={`px-5 py-1.5 rounded-full text-xs font-black tracking-tight transition-all border-2 border-black inline-flex items-center gap-1.5 cursor-pointer ${
+              isSupporterRegistered
+                ? 'bg-black text-[#00E5FF]'
+                : 'bg-transparent text-black hover:bg-black/10'
+            }`}
+          >
+            {isSupporterRegistered ? (
+              <>
+                <span>지원완료 ♿</span>
+              </>
+            ) : (
+              <>
+                <span>지원하기</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

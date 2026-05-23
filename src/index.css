@@ -6,21 +6,46 @@
   --font-display: 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-neon-blue: #3B82F6;
-  --color-electric-cyan: #06B6D4;
+  /* Override blue to be Neon Cyan to instantly convert blue-themed elements to the mockup's vivid Cyan style! */
+  --color-blue-50: #ecfeff;
+  --color-blue-100: #cffafe;
+  --color-blue-200: #a5f3fc;
+  --color-blue-300: #67e8f9;
+  --color-blue-400: #00F0FF;
+  --color-blue-500: #00E5FF;
+  --color-blue-600: #00CBE5;
+  --color-blue-700: #009cb0;
+  --color-blue-800: #086d7c;
+  --color-blue-900: #0e5a66;
+  --color-blue-950: #002229;
+
+  /* Overwrite slate to match the mockup's deep, pristine charcoal dark grays */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-550: #64748b;
+  --color-slate-800: #1a1a1d;
+  --color-slate-850: #222226;
+  --color-slate-900: #121214;
+  --color-slate-950: #060608;
+
+  --color-neon-blue: #00E5FF;
+  --color-electric-cyan: #00F0FF;
   --color-warning-yellow: #EAB308;
   --color-hazard-red: #EF4444;
-  --color-safe-green: #22C55E;
+  --color-safe-green: #10B981;
   --color-soft-gray: #6B7280;
-  --color-deep-slate: #1E293B;
+  --color-deep-slate: #121214;
   --color-pitch-black: #000000;
-  --color-dark-bg: #0F172A;
+  --color-dark-bg: #000000;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #0B0F19;
-  color: #E2E8F0;
+  background-color: #000000;
+  color: #FFFFFF;
   transition: font-size 0.2s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -30,10 +55,10 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0F172A;
+  background: #060608;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3B82F6;
+  background: #00E5FF;
   border-radius: 3px;
 }
 

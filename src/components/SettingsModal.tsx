@@ -9,8 +9,6 @@ interface SettingsModalProps {
   onFontScaleChange: (scale: number) => void;
   highContrast: boolean;
   onHighContrastToggle: () => void;
-  showVoiceConsole: boolean;
-  onVoiceConsoleToggle: () => void;
 }
 
 export default function SettingsModal({
@@ -20,8 +18,6 @@ export default function SettingsModal({
   onFontScaleChange,
   highContrast,
   onHighContrastToggle,
-  showVoiceConsole,
-  onVoiceConsoleToggle,
 }: SettingsModalProps) {
   return (
     <AnimatePresence>
@@ -92,29 +88,6 @@ export default function SettingsModal({
                 <div
                   className={`w-5 h-5 rounded-full shadow-md bg-white transition-all transform ${
                     highContrast ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* 3. Screen Reader TTS switch */}
-            <div className="flex items-center justify-between py-1 border-t border-slate-800/10 pt-3">
-              <div className="space-y-0.5 pr-4">
-                <h4 className="text-xs font-extrabold text-slate-205 hc-text">🎙️ 인-앱 스크린 리더 콘솔 활성</h4>
-                <p className="text-[9px] text-slate-400 leading-normal hc-text-mute">
-                  터치와 선택 요소를 하단 해설창으로 자막화해주는 음성 안내 시뮬레이터
-                </p>
-              </div>
-              <button
-                onClick={onVoiceConsoleToggle}
-                className={`w-11 h-6 rounded-full p-0.5 transition-all flex items-center relative ${
-                  showVoiceConsole ? 'bg-blue-600 border-blue-505' : 'bg-slate-800 border-slate-700/50'
-                }`}
-                aria-label="스크린 리더 토글"
-              >
-                <div
-                  className={`w-5 h-5 rounded-full shadow-md bg-white transition-all transform ${
-                    showVoiceConsole ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>

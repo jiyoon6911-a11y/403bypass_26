@@ -519,10 +519,6 @@ export default function App() {
           setHighContrast(nextHC);
           handleAnnounce(nextHC ? "고대비 흑백 안전 보정 뷰가 시작되었습니다." : "일반 컬러 우주 다크 인터페이스로 복구했습니다.");
         }}
-        showVoiceConsole={showVoiceConsole}
-        onVoiceConsoleToggle={() => {
-          setShowVoiceConsole(!showVoiceConsole);
-        }}
       />
 
       <SyncModal
