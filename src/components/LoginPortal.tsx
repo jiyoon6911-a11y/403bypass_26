@@ -38,6 +38,55 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
   const [timer, setTimer] = useState(180);
   const [checkingRealEmail, setCheckingRealEmail] = useState(false);
 
+  // In-app webview detector for Korean messenger apps (KakaoTalk, Instagram, Naver, etc.)
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [inAppType, setInAppType] = useState<string | null>(null);
+  const [isAndroidOs, setIsAndroidOs] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    setIsAndroidOs(isAndroid);
+
+    if (/KAKAOTALK/i.test(ua)) {
+      setIsInAppBrowser(true);
+      setInAppType('카카오톡(KakaoTalk)');
+    } else if (/Instagram/i.test(ua)) {
+      setIsInAppBrowser(true);
+      setInAppType('인스타그램(Instagram)');
+    } else if (/NAVER/i.test(ua)) {
+      setIsInAppBrowser(true);
+      setInAppType('네이버(Naver)');
+    } else if (/FBAN|FBAV/i.test(ua)) {
+      setIsInAppBrowser(true);
+      setInAppType('페이스북(Facebook)');
+    } else if (/Type\//i.test(ua) || /WebView/i.test(ua) || /wnis/i.test(ua)) {
+      setIsInAppBrowser(true);
+      setInAppType('인앱 브라우저(WebView)');
+    }
+  }, []);
+
+  const handleEscapeInAppBrowser = () => {
+    const currentUrl = window.location.href;
+    const cleanUrl = currentUrl.replace(/https?:\/\//, '');
+
+    if (isAndroidOs) {
+      // Android Intent scheme to escape KakaoTalk and open Chrome
+      const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = intentUrl;
+    } else {
+      // iOS alert instructions
+      alert(
+        `[아이폰 iOS 카카오톡/인앱 브라우저 대응 안내]\n\n` +
+        `구글 보안 정책(disallowed_useragent)으로 인해, 앱 내부 브라우저에서는 구글 로그인이 불가능합니다. 아래 지침을 따라주세요:\n\n` +
+        `1️⃣ 화면 오른쪽 아래의 [ ··· ] (더보기) 또는 [ 🌐 ] 브라우저 모양 버튼을 누릅니다.\n` +
+        `2️⃣ '다른 브라우저로 열기' 또는 'Safari로 열기'를 클릭합니다.\n` +
+        `3️⃣ 열린 외부 브라우저(사파리/크롬)에서 로그인하시면 아주 잘 작동합니다!\n\n` +
+        `※ 또는 가입 시 등록한 '일반 이메일 계정 로그인' 방식을 사용하여 간편하게 즉시 진입하실 수도 있습니다.`
+      );
+    }
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSentCode && timer > 0 && !isVerified) {
@@ -318,7 +367,32 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
 
           {/* Quick SSO */}
           {mode === 'login' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              {isInAppBrowser && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2 text-left">
+                  <div className="flex items-center gap-1.5 text-[11px] font-black text-amber-400">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>⚠️ {inAppType} 감지 - 구글 로그인 제한 안내</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-300 leading-relaxed font-medium">
+                    구글 보안 정책상 <strong>카톡, 인스타, 네이버 등 인앱 브라우저</strong>에서는 구글 간편 로그인이 차단됩니다 (403 disallowed_useragent 오류).
+                  </p>
+                  <p className="text-[10px] text-[#00E5FF] leading-relaxed font-bold">
+                    아래 버튼을 눌러 외부 전용 브라우저(크롬/사파리)로 전환하시면 외부 연동 및 동기화 로그인이 정상 작동합니다!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleEscapeInAppBrowser}
+                    className="w-full py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>🚀 {isAndroidOs ? "기본 크롬(Chrome) 브라우저로 열기" : "💡 아이폰 사파리(Safari) 열기 안내"}</span>
+                  </button>
+                  <p className="text-[9px] text-zinc-500 text-center font-semibold">
+                    * 또는 아래 일반계정 회원가입을 이용하시면 어떠한 앱 브라우저에서도 즉시 가입 및 이용이 가능합니다.
+                  </p>
+                </div>
+              )}
+
               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block hc-text-mute">Google 간편 로그인</span>
               <button
                 onClick={handleGoogleQuickLogin}
