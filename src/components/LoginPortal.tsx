@@ -190,7 +190,18 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
       onLoginSuccess(userObj as any);
     } catch (error) {
       console.error('Email Login Error:', error);
-      alert('로그인에 실패했습니다. 이메일 또는 비밀번호를 다시 확인해주십시오: ' + (error instanceof Error ? error.message : String(error)));
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.includes('auth/operation-not-allowed') || errMsg.includes('operation-not-allowed')) {
+        alert(
+          `🛑 [이메일 로그인 활성화 필요]\n\n` +
+          `현재 Firebase 프로젝트 내에서 '이메일/비밀번호(Email/Password)' 로그인 인증 설정이 비활성화되어 있습니다.\n\n` +
+          `🛠️ 해결 방법:\n` +
+          `🔗 https://console.firebase.google.com/project/gen-lang-client-0377865290/authentication/providers\n` +
+          `위 Firebase 콘솔 주소에 접속하여 '이메일/비밀번호' 제공업체 스위치를 켜서 활성화해 주시면 로그인 및 회원가입이 즉시 가능해집니다!`
+        );
+      } else {
+        alert('로그인에 실패했습니다. 이메일 또는 비밀번호를 다시 확인해주십시오: ' + errMsg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +237,20 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
       alert(`📩 [BYPASS & FIREBASE CORE]\n[${signupEmail}] 주소로 실제 이메일 인증용 확인 메일이 즉시 발송되었습니다!\n\n💡 (가상 환경 테스트 안내): 메일함 확인이 불가능하거나 가짜 메일인 경우, 아래의 보안 인증 통행 번호 [${code}]를 기입하여 즉시 검증 통과할 수도 있습니다.`);
     } catch (error) {
       console.error('Email registration send error:', error);
-      alert("인증 메일 전송 실패(이미 가입된 주소이거나 양식 오류): " + (error instanceof Error ? error.message : String(error)));
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.includes('auth/operation-not-allowed') || errMsg.includes('operation-not-allowed')) {
+        alert(
+          `🛑 [이메일 로그인 승인 오류 안내]\n\n` +
+          `현재 설정된 Firebase 프로젝트에서 '이메일/비밀번호(Email/Password)' 로그인 방식이 활성화되어 있지 않습니다.\n\n` +
+          `🛠️ 해결 방법 (프로젝트 관리자 조치):\n` +
+          `1️⃣ 아래 Firebase 콘솔 링크로 브라우저에서 이동하세요:\n` +
+          `🔗 https://console.firebase.google.com/project/gen-lang-client-0377865290/authentication/providers\n\n` +
+          `2️⃣ 'Sign-in method' 대시보드에서 [이메일/비밀번호] 제공업체를 찾아 '사용 설정(활성화)'으로 스위치를 켜주십시오.\n` +
+          `3️⃣ 변경사항을 저장하신 후, 다시 본 웹앱에서 인증 요청 버튼을 누르시면 정상 메일 발송 및 가입 통과가 완료됩니다!`
+        );
+      } else {
+        alert("인증 메일 전송 실패(이미 가입된 주소이거나 양식 오류): " + errMsg);
+      }
     } finally {
       setIsLoading(false);
     }
