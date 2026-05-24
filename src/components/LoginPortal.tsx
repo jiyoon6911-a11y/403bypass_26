@@ -8,17 +8,27 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+
+const PRESET_AVATARS = [
+  { emoji: '🐹', label: '햄스터' },
+  { emoji: '🦊', label: '여우' },
+  { emoji: '🐼', label: '판다' },
+  { emoji: '🐱', label: '고양이' },
+  { emoji: '♿', label: '무장벽러' },
+  { emoji: '🤝', label: '서포터' },
+  { emoji: '🎭', label: '아티스트' },
+];
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface LoginPortalProps {
-  onLoginSuccess: (user: { email: string; name: string; userId: string; role: string }) => void;
+  onLoginSuccess: (user: { email: string; name: string; userId: string; role: string; avatarUrl?: string }) => void;
   onOpenSettings: () => void;
   highContrast: boolean;
 }
 
 export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContrast }: LoginPortalProps) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'onboarding'>('login');
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +39,19 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupRole, setSignupRole] = useState('장애인 당사자');
+  const [signupAvatar, setSignupAvatar] = useState('🐹');
+
+  // Onboarding parameters for first-time Google sign-up
+  const [onboardingEmail, setOnboardingEmail] = useState('');
+  const [onboardingName, setOnboardingName] = useState('');
+  const [onboardingId, setOnboardingId] = useState('');
+  const [onboardingRole, setOnboardingRole] = useState('장애인 당사자');
+  const [onboardingAvatar, setOnboardingAvatar] = useState('🐹');
+
+  // Unique ID Duplication Check values
+  const [isCheckingId, setIsCheckingId] = useState(false);
+  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [duplicateCheckedId, setDuplicateCheckedId] = useState('');
 
   // Verification fields
   const [isSentCode, setIsSentCode] = useState(false);
@@ -116,27 +139,17 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
         handleFirestoreError(err, OperationType.GET, `users/${emailStr}`);
       }
 
-      let userObj;
       if (snap && snap.exists()) {
-        userObj = snap.data();
+        const userObj = snap.data();
+        localStorage.setItem(`user_profile_${emailStr}`, JSON.stringify(userObj));
+        localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
+        onLoginSuccess(userObj as any);
       } else {
-        const defaultId = emailStr.split('@')[0].replace(/[^a-z0-9_]/g, '');
-        userObj = {
-          userId: defaultId,
-          name: fUser.displayName || '무명 무벽 관객',
-          email: emailStr,
-          role: '장애인 당사자',
-        };
-        try {
-          await setDoc(docRef, userObj);
-        } catch (err) {
-          handleFirestoreError(err, OperationType.WRITE, `users/${emailStr}`);
-        }
+        // Switch to onboarding modal mode
+        setOnboardingEmail(emailStr);
+        setOnboardingName(fUser.displayName || '');
+        setMode('onboarding');
       }
-
-      localStorage.setItem(`user_profile_${emailStr}`, JSON.stringify(userObj));
-      localStorage.setItem('bypass_logged_in_user', JSON.stringify(userObj));
-      onLoginSuccess(userObj as any);
     } catch (error) {
       console.error('Google Popup Auth Error:', error);
       alert('구글 로그인에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
@@ -274,10 +287,86 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     }
   };
 
+  const checkIdDuplication = async (id: string, formType: 'signup' | 'onboarding') => {
+    const formattedId = id.trim().toLowerCase().replace(/[^a-z0-0_]/g, '');
+    if (!formattedId) {
+      alert("아이디 형식(영문/숫자/_ 만 가능)에 부합하지 않거나 비어 있습니다.");
+      return;
+    }
+    if (formattedId.length < 3) {
+      alert("고유 아이디는 최소 3글자 이상이어야 합니다.");
+      return;
+    }
+
+    setIsCheckingId(true);
+    setIdCheckStatus('checking');
+    try {
+      const q = query(collection(db, 'users'), where('userId', '==', formattedId));
+      const snap = await getDocs(q);
+      
+      if (!snap.empty) {
+        setIdCheckStatus('taken');
+        alert(`❌ [@${formattedId}] 아이디는 이미 다른 회원이 사용 중입니다. 다른 아이디를 입력해 주세요.`);
+      } else {
+        setIdCheckStatus('available');
+        setDuplicateCheckedId(formattedId);
+        alert(`✅ [@${formattedId}] 아이디는 사용 가능합니다!`);
+      }
+    } catch (err) {
+      console.error("ID duplication check error:", err);
+      alert("아이디 중복 조회 도중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setIsCheckingId(false);
+    }
+  };
+
+  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formattedId = onboardingId.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (!formattedId || !onboardingName.trim() || !onboardingEmail) return;
+
+    if (idCheckStatus !== 'available' || duplicateCheckedId !== formattedId) {
+      alert("🚫 고유 사용자 ID 중복 확인을 먼저 완료해 주십시오.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const newUser = {
+        userId: formattedId,
+        name: onboardingName.trim(),
+        email: onboardingEmail,
+        role: onboardingRole,
+        avatarUrl: onboardingAvatar
+      };
+
+      const docRef = doc(db, 'users', onboardingEmail);
+      try {
+        await setDoc(docRef, newUser);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `users/${onboardingEmail}`);
+      }
+
+      localStorage.setItem(`user_profile_${onboardingEmail}`, JSON.stringify(newUser));
+      localStorage.setItem('bypass_logged_in_user', JSON.stringify(newUser));
+      onLoginSuccess(newUser);
+    } catch (err) {
+      console.error("Onboarding saving profile error:", err);
+      alert("구글 회원 등록 프로필 저장에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleManualSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const formattedId = signupId.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!formattedId || !signupName.trim() || !signupEmail.trim() || !signupPassword) return;
+
+    if (idCheckStatus !== 'available' || duplicateCheckedId !== formattedId) {
+      alert("🚫 고유 사용자 ID 중복 확인을 먼저 완료해 주십시오.");
+      return;
+    }
 
     if (!isVerified) {
       alert("🚫 본인 확인을 위해 실제 메일함의 링크를 클릭한 후, [실제 이메일 인증 완료 확인] 과정을 거쳐 주십시오.");
@@ -290,7 +379,8 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
         userId: formattedId,
         name: signupName.trim(),
         email: signupEmail.trim(),
-        role: signupRole
+        role: signupRole,
+        avatarUrl: signupAvatar
       };
 
       // Save user record to Firestore
@@ -352,24 +442,39 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
 
         {/* Form panel container */}
         <div className="hc-card bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
-          <div className="flex border-b border-slate-800">
-            <button
-              onClick={() => setMode('login')}
-              className={`flex-1 pb-2.5 text-center text-xs font-black transition-all ${
-                mode === 'login' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              로그인
-            </button>
-            <button
-              onClick={() => setMode('signup')}
-              className={`flex-1 pb-2.5 text-center text-xs font-bold transition-all ${
-                mode === 'signup' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              회원가입
-            </button>
-          </div>
+          {mode !== 'onboarding' ? (
+            <div className="flex border-b border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setIdCheckStatus('idle');
+                }}
+                className={`flex-1 pb-2.5 text-center text-xs font-black transition-all ${
+                  mode === 'login' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                로그인
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setIdCheckStatus('idle');
+                }}
+                className={`flex-1 pb-2.5 text-center text-xs font-bold transition-all ${
+                  mode === 'signup' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                회원가입
+              </button>
+            </div>
+          ) : (
+            <div className="border-b border-slate-800 pb-2.5 text-center">
+              <h2 className="text-sm font-black text-blue-400 tracking-wider">🌟 GOOGLE 계정 연동 가입 단계</h2>
+              <p className="text-[10px] text-slate-400">맞춤 서비스를 위한 추가 정보를 기입해 주세요.</p>
+            </div>
+          )}
 
           {/* Quick SSO */}
           {mode === 'login' && (
@@ -458,25 +563,47 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                 <span>로그인 완료</span>
               </button>
             </form>
-          ) : (
+          ) : mode === 'signup' ? (
             <form onSubmit={handleManualSignup} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">고유 사용자 ID / 핸들 (영문/숫자)</label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 text-xs text-slate-500 font-bold">@</span>
-                  <input
-                    type="text"
-                    required
-                    value={signupId}
-                    onChange={(e) => setSignupId(e.target.value)}
-                    placeholder="universal01"
-                    className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800 pl-7 pr-3 py-2.5 focus:border-blue-500 focus:outline-none hc-card"
-                  />
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">고유 사용자 ID / 핸들 (영문/숫자/_)</label>
+                <div className="flex gap-2">
+                  <div className="relative flex items-center flex-1">
+                    <span className="absolute left-3 text-xs text-slate-500 font-bold">@</span>
+                    <input
+                      type="text"
+                      required
+                      value={signupId}
+                      onChange={(e) => {
+                        const clean = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                        setSignupId(clean);
+                        if (clean !== duplicateCheckedId) {
+                          setIdCheckStatus('idle');
+                        }
+                      }}
+                      placeholder="universal01"
+                      className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800 pl-7 pr-3 py-2.5 focus:border-blue-500 focus:outline-none hc-card"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => checkIdDuplication(signupId, 'signup')}
+                    disabled={isCheckingId || !signupId}
+                    className="text-[10px] font-bold bg-slate-800 text-cyan-400 px-3 py-2 rounded-xl border border-slate-700 hover:bg-slate-700 active:scale-95 transition-all whitespace-nowrap shrink-0 disabled:opacity-50"
+                  >
+                    {isCheckingId ? '조회 중...' : '중복 확인'}
+                  </button>
                 </div>
+                {idCheckStatus === 'available' && signupId === duplicateCheckedId && (
+                  <p className="text-[9px] text-emerald-400 font-bold text-left">✅ 사용 가능한 아이디입니다!</p>
+                )}
+                {idCheckStatus === 'taken' && (
+                  <p className="text-[9px] text-red-400 font-bold text-left">❌ 이미 사용 중인 아이디입니다.</p>
+                )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">이름 / 닉네임</label>
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">닉네임 / 별명</label>
                 <input
                   type="text"
                   required
@@ -487,7 +614,39 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                 />
               </div>
 
-              <div className="space-y-1">
+              {/* Profile Avatar Selection */}
+              <div className="space-y-1.5 text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">프로필 사진(캐릭터아바타) 선택</span>
+                <div className="grid grid-cols-7 gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                  {PRESET_AVATARS.map((av) => (
+                    <button
+                      key={av.emoji}
+                      type="button"
+                      onClick={() => setSignupAvatar(av.emoji)}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${
+                        signupAvatar === av.emoji
+                          ? 'bg-blue-600 ring-2 ring-blue-400 scale-105 shadow-md'
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-350'
+                      } cursor-pointer`}
+                      title={av.label}
+                    >
+                      {av.emoji}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-500 font-bold block">또는 커스텀 이미지 웹 링크 URL (선택사항)</span>
+                  <input
+                    type="url"
+                    value={signupAvatar.startsWith('http') ? signupAvatar : ''}
+                    onChange={(e) => setSignupAvatar(e.target.value || '🐹')}
+                    placeholder="https://example.com/profile.jpg"
+                    className="w-full text-[10px] bg-slate-950 text-slate-350 rounded-lg border border-slate-800 p-1 px-2 focus:border-blue-500 focus:outline-none hc-card"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1 text-left">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">이메일 주소</label>
                 <div className="flex gap-2">
                   <input
@@ -552,7 +711,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                 </div>
               )}
 
-              <div className="space-y-1">
+              <div className="space-y-1 text-left">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">비밀번호 비밀키</label>
                 <input
                   type="password"
@@ -566,7 +725,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
               </div>
 
               {/* Barriers selector role */}
-              <div className="space-y-1.5 pt-1 mb-2">
+              <div className="space-y-1.5 pt-1 mb-2 text-left">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">보편적 지원 및 관람 유형</span>
                 <div className="grid grid-cols-3 gap-1.5">
                   <button
@@ -611,6 +770,156 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
               >
                 회원 등록 및 즉시 로그인
               </button>
+            </form>
+          ) : (
+            /* Onboarding mode */
+            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
+              <div className="p-3 bg-blue-550/10 border border-blue-500/20 rounded-xl text-left">
+                <div className="text-xs font-black text-blue-400 mb-1">🔗 구글 회원정보 연동 성공!</div>
+                <p className="text-[10px] text-zinc-350 leading-normal font-semibold">
+                  [{onboardingEmail}] 계정 연동을 마쳤습니다. 보안 가입을 안전하게 마무리하기 위해, 고유 사용자 아이디(ID)와 맞춤 장벽 설정을 완료해 주시기 바랍니다.
+                </p>
+              </div>
+
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">고유 사용자 ID / 핸들 (영문/숫자/_)</label>
+                <div className="flex gap-2">
+                  <div className="relative flex items-center flex-1">
+                    <span className="absolute left-3 text-xs text-slate-500 font-bold">@</span>
+                    <input
+                      type="text"
+                      required
+                      value={onboardingId}
+                      onChange={(e) => {
+                        const clean = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                        setOnboardingId(clean);
+                        if (clean !== duplicateCheckedId) {
+                          setIdCheckStatus('idle');
+                        }
+                      }}
+                      placeholder="universal01"
+                      className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800 pl-7 pr-3 py-2.5 focus:border-blue-500 focus:outline-none hc-card"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => checkIdDuplication(onboardingId, 'onboarding')}
+                    disabled={isCheckingId || !onboardingId}
+                    className="text-[10px] font-bold bg-slate-800 text-cyan-400 px-3 py-2 rounded-xl border border-slate-700 hover:bg-slate-700 active:scale-95 transition-all whitespace-nowrap shrink-0 disabled:opacity-50"
+                  >
+                    {isCheckingId ? '조회 중...' : '중복 확인'}
+                  </button>
+                </div>
+                {idCheckStatus === 'available' && onboardingId === duplicateCheckedId && (
+                  <p className="text-[9px] text-emerald-400 font-bold">✅ 사용 가능한 아이디입니다!</p>
+                )}
+                {idCheckStatus === 'taken' && (
+                  <p className="text-[9px] text-red-400 font-bold">❌ 이미 사용 중인 아이디입니다.</p>
+                )}
+              </div>
+
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">사용자 이름 / 닉네임</label>
+                <input
+                  type="text"
+                  required
+                  value={onboardingName}
+                  onChange={(e) => setOnboardingName(e.target.value)}
+                  placeholder="닉네임 입력"
+                  className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800 px-3 py-2.5 focus:border-blue-500 focus:outline-none hc-card"
+                />
+              </div>
+
+              {/* Profile Avatar Selection */}
+              <div className="space-y-1.5 text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">프로필 사진(캐릭터아바타) 선택</span>
+                <div className="grid grid-cols-7 gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                  {PRESET_AVATARS.map((av) => (
+                    <button
+                      key={av.emoji}
+                      type="button"
+                      onClick={() => setOnboardingAvatar(av.emoji)}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${
+                        onboardingAvatar === av.emoji
+                          ? 'bg-blue-600 ring-2 ring-blue-400 scale-105 shadow-md'
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-350'
+                      } cursor-pointer`}
+                      title={av.label}
+                    >
+                      {av.emoji}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-500 font-bold block">또는 커스텀 이미지 웹 링크 URL (선택사항)</span>
+                  <input
+                    type="url"
+                    value={onboardingAvatar.startsWith('http') ? onboardingAvatar : ''}
+                    onChange={(e) => setOnboardingAvatar(e.target.value || '🐹')}
+                    placeholder="https://example.com/profile.jpg"
+                    className="w-full text-[10px] bg-slate-950 text-slate-350 rounded-lg border border-slate-800 p-1 px-2 focus:border-blue-500 focus:outline-none hc-card"
+                  />
+                </div>
+              </div>
+
+              {/* Support role */}
+              <div className="space-y-1.5 text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">보편적 지원 및 관람 유형</span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setOnboardingRole('장애인 당사자')}
+                    className={`py-2 text-[9px] font-bold rounded-lg border text-center transition-all ${
+                      onboardingRole === '장애인 당사자'
+                        ? 'border-blue-500/30 bg-blue-500/10 text-blue-400'
+                        : 'border-slate-800 bg-slate-950 text-slate-400'
+                    }`}
+                  >
+                    ♿ 동행 희망
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOnboardingRole('서포터즈')}
+                    className={`py-2 text-[9px] font-bold rounded-lg border text-center transition-all ${
+                      onboardingRole === '서포터즈'
+                        ? 'border-green-500/30 bg-green-500/10 text-green-400'
+                        : 'border-slate-800 bg-slate-950 text-slate-400'
+                    }`}
+                  >
+                    🤝 보조 헬퍼
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOnboardingRole('일반')}
+                    className={`py-2 text-[9px] font-bold rounded-lg border text-center transition-all ${
+                      onboardingRole === '일반'
+                        ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
+                        : 'border-slate-800 bg-slate-950 text-slate-400'
+                    }`}
+                  >
+                    🎭 일반 관람
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setIdCheckStatus('idle');
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-black transition-all border border-slate-750 cursor-pointer"
+                >
+                  가입 취소
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 hc-button-primary py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-xs font-black shadow-lg transition-all cursor-pointer"
+                >
+                  프로필 완성하기
+                </button>
+              </div>
             </form>
           )}
         </div>

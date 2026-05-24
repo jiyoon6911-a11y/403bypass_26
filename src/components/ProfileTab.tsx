@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { LogOut, Tag, Search, Users, MessageSquare } from 'lucide-react';
 import { ReviewLog, Comment } from '../types';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface ProfileTabProps {
-  currentUser: { email: string; name: string; userId: string; role: string };
+  currentUser: { email: string; name: string; userId: string; role: string; avatarUrl?: string };
   onLogout: () => void;
   personalReviews: any[];
   onAddReview: (review: { show: string; rating: number; text: string }) => void;
@@ -74,26 +76,58 @@ export default function ProfileTab({
     alert(`성공적으로 고유 아이디가 @${formatted}(으)로 셋업되었습니다!`);
   };
 
-  const handleSearchNetwork = () => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
+  const [isSearchingDb, setIsSearchingDb] = useState(false);
+
+  const handleSearchNetwork = async () => {
+    const qStr = searchQuery.trim().toLowerCase();
+    if (!qStr) {
       setSearchResult(null);
       return;
     }
 
-    let found: any = null;
-    if (query === 'art_pioneer' || query === '백예람') {
-      found = { userId: 'art_pioneer', name: '백예람', role: '장애인 당사자', type: '♿ 지체' };
-    } else if (query === 'culture_helper' || query === '김지민') {
-      found = { userId: 'culture_helper', name: '김지민', role: '서포터즈', type: '🤝 서포터' };
-    } else if (query === 'wheel_champion' || query === '박정우') {
-      found = { userId: 'wheel_champion', name: '박정우', role: '장애인 당사자', type: '♿ 지체' };
-    }
+    setIsSearchingDb(true);
+    try {
+      // First try to match by exact userId
+      const qUser = query(collection(db, 'users'), where('userId', '==', qStr));
+      let snap = await getDocs(qUser);
 
-    if (found) {
-      setSearchResult(found);
-    } else {
-      setSearchResult({ notFound: true, query });
+      // If not found, try to match by name
+      if (snap.empty) {
+        const qName = query(collection(db, 'users'), where('name', '==', searchQuery.trim()));
+        snap = await getDocs(qName);
+      }
+
+      if (!snap.empty) {
+        const docData = snap.docs[0].data();
+        setSearchResult({
+          userId: docData.userId,
+          name: docData.name,
+          role: docData.role,
+          type: docData.role === '장애인 당사자' ? '♿ 동행 희망' : docData.role === '서포터즈' ? '🤝 보조 헬퍼' : '🎭 일반 관람',
+          avatarUrl: docData.avatarUrl
+        });
+      } else {
+        // Fallback search to find static ones if any
+        let found: any = null;
+        if (qStr === 'art_pioneer' || qStr === '백예람') {
+          found = { userId: 'art_pioneer', name: '백예람', role: '장애인 당사자', type: '♿ 동행 희망' };
+        } else if (qStr === 'culture_helper' || qStr === '김지민') {
+          found = { userId: 'culture_helper', name: '김지민', role: '서포터즈', type: '🤝 보조 헬퍼' };
+        } else if (qStr === 'wheel_champion' || qStr === '박정우') {
+          found = { userId: 'wheel_champion', name: '박정우', role: '장애인 당사자', type: '♿ 동행 희망' };
+        }
+
+        if (found) {
+          setSearchResult(found);
+        } else {
+          setSearchResult({ notFound: true, query: searchQuery });
+        }
+      }
+    } catch (err) {
+      console.error("Search network error:", err);
+      alert("네트워크 조회에 실패했습니다.");
+    } finally {
+      setIsSearchingDb(false);
     }
   };
 
@@ -112,9 +146,24 @@ export default function ProfileTab({
       {/* User Basic Info Card */}
       <div className="hc-card rounded-2xl p-4 bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-left">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-650 to-cyan-500 flex items-center justify-center text-white text-base font-black shadow-lg shadow-blue-500/20 shrink-0">
-            {currentUser.name.substring(0, 2)}
-          </div>
+          {currentUser.avatarUrl ? (
+            currentUser.avatarUrl.startsWith('http') ? (
+              <img
+                src={currentUser.avatarUrl}
+                referrerPolicy="no-referrer"
+                className="w-12 h-12 rounded-full object-cover border border-slate-700 shrink-0"
+                alt="Profile"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 font-extrabold text-2xl flex items-center justify-center shrink-0">
+                {currentUser.avatarUrl}
+              </div>
+            )
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-650 to-cyan-500 flex items-center justify-center text-white text-base font-black shadow-lg shadow-blue-500/20 shrink-0">
+              {currentUser.name.substring(0, 2)}
+            </div>
+          )}
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="text-sm font-extrabold text-white">{currentUser.name} 님</h3>
@@ -336,9 +385,24 @@ export default function ProfileTab({
                 ) : (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs truncate">
-                        {searchResult.name.substring(0, 2)}
-                      </div>
+                      {searchResult.avatarUrl ? (
+                        searchResult.avatarUrl.startsWith('http') ? (
+                          <img
+                            src={searchResult.avatarUrl}
+                            referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover border border-slate-700"
+                            alt="Profile"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-base font-extrabold">
+                            {searchResult.avatarUrl}
+                          </div>
+                        )
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs truncate">
+                          {searchResult.name.substring(0, 2)}
+                        </div>
+                      )}
                       <div className="text-left leading-normal text-[11px]">
                         <p className="font-extrabold text-white">
                           {searchResult.name} <span className="text-[8px] text-cyan-405">{searchResult.type}</span>
