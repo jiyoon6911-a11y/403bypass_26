@@ -32,8 +32,6 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
 
   // Verification fields
   const [isSentCode, setIsSentCode] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [userEnteredCode, setUserEnteredCode] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [timer, setTimer] = useState(180);
   const [checkingRealEmail, setCheckingRealEmail] = useState(false);
@@ -208,7 +206,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
   };
 
   // Register unverified email + Send actual verification URL to user's real email!
-  const sendEmailCode = async () => {
+  const sendEmailLink = async () => {
     if (!signupEmail.trim() || !signupEmail.includes('@')) {
       alert("정상적인 메일 주소를 먼저 입력해 주십시오.");
       return;
@@ -227,14 +225,11 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
       // Request real Firebase verification email
       await sendEmailVerification(fUser);
 
-      // Create fallback verification code for simulation bypass (if they are testing locally without real email)
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setVerificationCode(code);
       setIsSentCode(true);
       setTimer(180);
       setIsVerified(false);
 
-      alert(`📩 [BYPASS & FIREBASE CORE]\n[${signupEmail}] 주소로 실제 이메일 인증용 확인 메일이 즉시 발송되었습니다!\n\n💡 (가상 환경 테스트 안내): 메일함 확인이 불가능하거나 가짜 메일인 경우, 아래의 보안 인증 통행 번호 [${code}]를 기입하여 즉시 검증 통과할 수도 있습니다.`);
+      alert(`📩 [인증 링크 이메일 발송 완료]\n\n[${signupEmail}] 주소로 실제 이메일 인증용 확인 메일이 즉시 발송되었습니다!\n\n💡 인증 방법:\n1️⃣ 가입하신 메일함(스팸메일함 포함)에서 Firebase 인증 링크 메일을 확인하세요.\n2️⃣ 메일 본문 안의 링크를 터치/클릭하여 이메일 인증을 완료합니다.\n3️⃣ 메일 인증을 끝마친 후 본 회원가입 화면으로 다시 돌아와 아래의 [📬 실제 이메일 인증 완료 확인] 버튼을 눌러주십시오!`);
     } catch (error) {
       console.error('Email registration send error:', error);
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -256,19 +251,10 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     }
   };
 
-  const handleVerifyCode = () => {
-    if (userEnteredCode === verificationCode && timer > 0) {
-      setIsVerified(true);
-      alert("이메일 진위 확인이 성공 완료되었습니다!");
-    } else {
-      alert("인증번호가 일치하지 않습니다. 다시 올바르게 기재해 주십시오.");
-    }
-  };
-
   // Real-time check if user has verified via email link!
   const checkRealEmailVerified = async () => {
     if (!auth.currentUser) {
-      alert("인증 대기 세션이 분실되었습니다. 인증코드를 다시 전송해 주시기 바랍니다.");
+      alert("인증 대기 세션이 분실되었습니다. 인증링크를 다시 전송해 주시기 바랍니다.");
       return;
     }
 
@@ -277,9 +263,9 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
       await auth.currentUser.reload();
       if (auth.currentUser.emailVerified) {
         setIsVerified(true);
-        alert("🎉 실제 이메일 메일함 확인 완료! 정상적으로 가입이 승인되었습니다.");
+        alert("🎉 실제 이메일 메일함 확인 완료! 정상적으로 가입이 승인되었습니다.\n\n이제 가장 아래에 있는 [회원 등록 및 즉시 로그인] 버튼을 누를 수 있습니다.");
       } else {
-        alert("⏳ 아직 이메일 안의 인증 링크가 활성화되지 않았습니다. 메일함에서 링크를 클릭한 후 다시 시도해 주십시오.");
+        alert("⏳ 아직 이메일 속 인증 링크가 클릭되지 않았습니다.\n\n귀하의 메일함에서 도착한 인증 메일을 열어 링크를 클릭(활성화)한 후 다시 단추를 눌러주십시오.");
       }
     } catch (err) {
       alert("인증 확인 과정에서 시간초과 혹은 서비스 전산 지연이 발생했습니다: " + (err instanceof Error ? err.message : String(err)));
@@ -288,17 +274,13 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
     }
   };
 
-  const autoFillDemoCode = () => {
-    setUserEnteredCode(verificationCode);
-  };
-
   const handleManualSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const formattedId = signupId.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!formattedId || !signupName.trim() || !signupEmail.trim() || !signupPassword) return;
 
     if (!isVerified) {
-      alert("🚫 이메일 실재성 인증(가상 코드 번호 입력 혹은 실제 메일함 링크 클릭 후 확인)을 먼저 진행부탁드립니다.");
+      alert("🚫 본인 확인을 위해 실제 메일함의 링크를 클릭한 후, [실제 이메일 인증 완료 확인] 과정을 거쳐 주십시오.");
       return;
     }
 
@@ -520,74 +502,51 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
                   <button
                     type="button"
                     disabled={isVerified || isLoading}
-                    onClick={sendEmailCode}
+                    onClick={sendEmailLink}
                     className="text-[11px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/30 px-3 py-2 rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-secondary flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
                     {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    인증번호 전송
+                    인증링크 전송
                   </button>
                 </div>
               </div>
 
               {/* Email Verification Form */}
               {isSentCode && (
-                <div className="space-y-1.5 border border-slate-800/60 p-3 rounded-2xl bg-slate-950/40 hc-card">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">메일 인증 완료 확인</label>
-                    <span className={`text-[10px] font-bold font-mono ${timer <= 30 ? 'text-red-500 animate-pulse' : 'text-blue-500'}`}>
-                      {isVerified ? '인증 성공 ✅' : formatTime(timer)}
+                <div className="space-y-3 border border-slate-800/60 p-3.5 rounded-2xl bg-slate-950/40 hc-card text-left">
+                  <div className="flex justify-between items-center border-b border-slate-800/60 pb-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">이메일 링크 인증 상태</label>
+                    <span className={`text-[10px] font-bold font-mono ${isVerified ? 'text-emerald-400' : 'text-cyan-400 animate-pulse'}`}>
+                      {isVerified ? '인증 승인됨 ✅' : '인증 링크 확인 대기 중'}
                     </span>
                   </div>
 
-                  {/* Option checking real email status */}
-                  {!isVerified && (
-                    <button
-                      type="button"
-                      onClick={checkRealEmailVerified}
-                      disabled={checkingRealEmail}
-                      className="w-full py-2 mb-1.5 rounded-xl bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30 border border-cyan-500/30 font-bold text-[10px] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      {checkingRealEmail ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>실시간 메일함 확인 중...</span>
-                        </>
-                      ) : (
-                        <span>📬 [실제 가입] 메일함에서 링크 클릭 완료 후 본인확인</span>
-                      )}
-                    </button>
-                  )}
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      disabled={isVerified}
-                      value={userEnteredCode}
-                      onChange={(e) => setUserEnteredCode(e.target.value)}
-                      placeholder="6자리 번호"
-                      maxLength={6}
-                      className="flex-1 text-xs bg-slate-950 text-white rounded-xl border border-slate-800 px-3 py-2.5 tracking-widest text-center font-bold font-mono focus:border-blue-500 focus:outline-none hc-card"
-                    />
-                    <button
-                      type="button"
-                      disabled={isVerified}
-                      onClick={handleVerifyCode}
-                      className="text-[10px] font-bold text-white bg-blue-600 px-3.5 py-2 rounded-xl hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap shrink-0 hc-button-primary cursor-pointer"
-                    >
-                      {isVerified ? '완료' : '가상코드 인증'}
-                    </button>
-                  </div>
-
-                  {!isVerified && (
-                    <div className="text-[9px] text-yellow-400 font-bold p-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-between gap-1 mt-1">
-                      <span>📧 [가상 알림] 가상코드: <span className="font-mono text-xs text-white">{verificationCode}</span></span>
+                  {!isVerified ? (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-zinc-300 leading-normal font-medium">
+                        📬 가입하신 이메일의 수신함으로 <strong>실제 인증 승인 링크</strong>가 발송되었습니다. 메일을 열어 링크를 클릭(터치)하신 후, 아래 확인 버튼을 눌러 승인 절차를 완료해 주세요.
+                      </p>
+                      
                       <button
                         type="button"
-                        onClick={autoFillDemoCode}
-                        className="text-[8px] bg-yellow-550 text-slate-950 px-1.5 py-0.5 rounded font-black hover:bg-yellow-300 transition-all font-sans cursor-pointer"
+                        onClick={checkRealEmailVerified}
+                        disabled={checkingRealEmail}
+                        className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md"
                       >
-                        자동입력
+                        {checkingRealEmail ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>실시간 이메일 인증 활성 여부 조회 중...</span>
+                          </>
+                        ) : (
+                          <span>📬 [실제 가입] 이메일 링크 클릭 후 본인확인 완료</span>
+                        )}
                       </button>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
+                      <p className="text-xs text-emerald-400 font-extrabold">🎉 이메일 소유권 인증에 대성공하였습니다!</p>
+                      <p className="text-[10px] text-zinc-400 font-medium mt-0.5">하단의 비밀번호 및 유형 선택 후 회원등록을 마쳐주세요.</p>
                     </div>
                   )}
                 </div>
@@ -609,7 +568,7 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
               {/* Barriers selector role */}
               <div className="space-y-1.5 pt-1 mb-2">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block hc-text">보편적 지원 및 관람 유형</span>
-                <div class="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setSignupRole('장애인 당사자')}
