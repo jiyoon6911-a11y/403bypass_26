@@ -5,7 +5,7 @@ import {
   AlertTriangle, AlertOctagon, Compass, Video, 
   HelpCircle, Accessibility, Activity, Volume2, 
   VolumeX, RefreshCw, Eye, Landmark, Navigation2, LogIn,
-  Sliders, X, Users, TrendingUp
+  Sliders, X, Users, TrendingUp, Info
 } from 'lucide-react';
 import { FLOORS_DATA } from '../data';
 
@@ -93,6 +93,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(null);
   const [isVibratingEffect, setIsVibratingEffect] = useState(false);
   const [isElevatorBroken, setIsElevatorBroken] = useState(false);
+  const [isShowMobileSpecs, setIsShowMobileSpecs] = useState(false);
 
   // Real-time crowd density congestion telemetry list
   const [congestionList, setCongestionList] = useState([
@@ -1101,19 +1102,19 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
         <div className="fixed inset-0 z-50 bg-[#060608] flex flex-col justify-between overflow-hidden text-left">
           
           {/* Top Header Panel */}
-          <div className="z-20 flex justify-between items-center bg-[#0d0d10] border-b border-slate-800 px-6 py-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/20">
-                <Layers className="w-5 h-5 text-[#00E5FF] animate-pulse" />
+          <div className="z-20 flex justify-between items-center bg-[#0d0d10] border-b border-slate-800 px-4 sm:px-6 py-2.5 sm:py-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-cyan-950/40 border border-cyan-500/20 hidden sm:block">
+                <Layers className="w-4 h-4 text-[#00E5FF] animate-pulse" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-black text-white tracking-tight flex items-center gap-2">
-                  S-MAP 3D 실시간 디지털 트윈 시뮬레이터
-                  <span className="text-[9px] bg-cyan-500/15 text-[#00E5FF] border border-cyan-550/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-widest animate-pulse">
-                    LIVE SCANNER
+                <h3 className="text-xs sm:text-base font-black text-white tracking-tight flex items-center gap-1.5">
+                  S-MAP 3D 디지털 트윈
+                  <span className="text-[8px] sm:text-[9px] bg-cyan-500/15 text-[#00E5FF] border border-cyan-550/30 px-1 py-0.5 rounded font-mono font-bold uppercase tracking-widest animate-pulse">
+                    LIVE
                   </span>
                 </h3>
-                <p className="text-[11px] text-slate-400 font-semibold font-sans mt-0.5">
+                <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold font-sans mt-0.5 hidden md:block">
                   실시간 보행로 물리 지형 데이터 및 휠체어 전동 회전 반경 통과 여부를 3D 가상 투시하여 검측합니다.
                 </p>
               </div>
@@ -1121,12 +1122,13 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
             <button 
               onClick={() => {
                 setIs3DActive(false);
+                setIsShowMobileSpecs(false);
                 onAnnounce("3D 공간 시뮬레이터를 종료하고 안전 보도 메인 요약도로 복귀했습니다.");
               }}
-              className="px-4 py-2 bg-rose-950/25 hover:bg-rose-900/40 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shadow select-none"
+              className="px-3 py-1.5 bg-rose-950/25 hover:bg-rose-900/40 text-rose-400 border border-rose-500/30 rounded-xl text-[11px] font-black transition-all cursor-pointer flex items-center gap-1 shadow select-none"
             >
-              <X className="w-4 h-4 text-rose-400" />
-              <span>3D 시뮬레이션 종료</span>
+              <X className="w-3.5 h-3.5 text-rose-400" />
+              <span>종료</span>
             </button>
           </div>
 
@@ -1134,7 +1136,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
           <div className="flex-1 w-full flex flex-col md:flex-row relative overflow-hidden">
             
             {/* Left Sidebar: Controls & Options */}
-            <div className="w-full md:w-64 border-r border-[#1a1a1f] bg-[#0c0c0e] p-5 flex flex-col justify-between shrink-0 space-y-6 overflow-y-auto">
+            <div className="hidden md:flex w-full md:w-64 border-r border-[#1a1a1f] bg-[#0c0c0e] p-5 flex flex-col justify-between shrink-0 space-y-6 overflow-y-auto">
               
               {/* Target Floor Selection */}
               <div className="space-y-3">
@@ -1237,85 +1239,167 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
             </div>
 
             {/* Center Viewport Stage (The main 3D visualization arena) */}
-            <div className="flex-1 relative flex flex-col justify-between bg-[#08080a] p-4 overflow-hidden select-none">
+            <div className="flex-1 relative flex flex-col justify-between bg-[#08080a] p-3 sm:p-4 overflow-hidden select-none">
+              
+              {/* MOBILE COMPACT FLOATING CONTROLLER FOR S-MAP */}
+              <div className="md:hidden z-30 flex flex-col gap-1.5 mt-0.5 px-0.5">
+                {/* Floor Selection + View Mode compact bar */}
+                <div className="flex flex-wrap gap-2 items-center justify-between bg-slate-900/95 border border-slate-800 p-2 rounded-xl backdrop-blur-sm">
+                  {/* Left: Floor Selection */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-zinc-400 font-black tracking-tighter uppercase mr-1">Floor:</span>
+                    <div className="flex gap-1">
+                      {[4, 3, 2, 1].map((f) => {
+                        const isSelected = selectedFloor === f;
+                        return (
+                          <button
+                            key={f}
+                            onClick={() => {
+                              setSelectedFloor(f);
+                              onAnnounce(`3D 내부 가상 도면: [${f}층 내부 다면 구조]를 변경 투사했습니다.`);
+                            }}
+                            className={`w-7 h-7 rounded-md font-black text-xs transition-all cursor-pointer flex items-center justify-center ${
+                              isSelected
+                                ? 'bg-[#00E5FF] text-slate-950 font-black shadow-inner'
+                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {f}F
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right: View Mode pills */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-zinc-400 font-black tracking-tighter uppercase mr-0.5">Scan:</span>
+                    <div className="flex gap-1">
+                      {[
+                        { id: 'default', label: '🗺️ 구조' },
+                        { id: 'hazard', label: '⚠️ 단차' },
+                        { id: 'radius', label: '♿ 회전' },
+                      ].map((item) => {
+                        const isActive = viewMode === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              setViewMode(item.id as any);
+                              onAnnounce(`3D 스캔 모드 변경: ${item.label}`);
+                            }}
+                            className={`px-1.5 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-cyan-900/40 border border-[#00E5FF]/40 text-[#00E5FF] shadow-inner font-extrabold'
+                                : 'bg-slate-950 border border-slate-850 text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-bar with Floor label name & Spec info sheet toggle */}
+                <div className="flex items-center justify-between text-[11px] bg-slate-950/90 border border-slate-900/60 p-2 rounded-xl">
+                  <p className="text-zinc-300 font-black text-[10.5px] truncate max-w-[170px] sm:max-w-none">
+                    📍 {DETAILED_3D_FLOORS[selectedFloor].title.split('[')[1]?.replace(']', '') || DETAILED_3D_FLOORS[selectedFloor].title}
+                  </p>
+                  
+                  {/* Detailed Spec Toggle Button */}
+                  <button
+                    onClick={() => {
+                      setIsShowMobileSpecs(prev => !prev);
+                      onAnnounce("층별 안전 편의시설 상세 보고서를 모바일 인터페이스로 실행했습니다.");
+                    }}
+                    className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[9px] text-white font-black transition-all cursor-pointer"
+                  >
+                    {isShowMobileSpecs ? '📋 닫기' : '📋 편의시설 정보'}
+                  </button>
+                </div>
+              </div>
               
               {/* 3D INTERACTIVE CONTROL BAR (Floating overlay with mode toggles) */}
-              <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl backdrop-blur-sm flex-wrap max-w-[280px] sm:max-w-none">
+              <div className="absolute top-4 right-4 z-30 flex items-center gap-1 bg-slate-900/95 border border-slate-800 p-1.5 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-sm flex-wrap max-w-[280px] sm:max-w-none">
                 {/* Drag Mode Toggles */}
                 <button
                   onClick={() => {
                     setDragMode('rotate');
                     onAnnounce("마우스 및 터치 드래그 동작을 [3D 각도 회전 모드]로 변경했습니다.");
                   }}
-                  className={`px-2 py-1.5 rounded-xl text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                  className={`px-2 py-1.5 rounded-lg text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
                     dragMode === 'rotate' ? 'bg-[#00E5FF] text-slate-950 shadow-md font-bold' : 'hover:bg-slate-800 text-slate-300'
                   }`}
                   title="드래그시 각도 회전"
                 >
-                  🔄 회전 모드
+                  🔄 회전
                 </button>
                 <button
                   onClick={() => {
                     setDragMode('pan');
                     onAnnounce("마우스 및 터치 드래그 동작을 [도면 평면 이동(Pan) 모드]로 변경했습니다.");
                   }}
-                  className={`px-2 py-1.5 rounded-xl text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
-                    dragMode === 'pan' ? 'bg-cyan-500 text-slate-950 shadow-md font-bold' : 'hover:bg-slate-800 text-slate-300'
+                  className={`px-2 py-1.5 rounded-lg text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                    dragMode === 'pan' ? 'bg-cyan-505 text-slate-950 shadow-md font-bold bg-[#00E5FF]' : 'hover:bg-slate-800 text-slate-300'
                   }`}
                   title="드래그시 도면 이동"
                 >
-                  🖐️ 이동 모드
+                  🖐️ 이동
                 </button>
 
-                <div className="w-[1.2px] h-4 bg-slate-800 hidden sm:block"></div>
+                <div className="w-[1.2px] h-4 bg-slate-850 hidden sm:block"></div>
 
                 {/* Legacy adjustments fallback */}
                 <button 
                   onClick={() => setRotationZ(z => z - 15)}
-                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  className="hidden sm:inline-flex p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="좌회전"
                 >
                   ↺
                 </button>
                 <button 
                   onClick={() => setRotationZ(z => z + 15)}
-                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  className="hidden sm:inline-flex p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="우회전"
                 >
                   ↻
                 </button>
                 <button 
                   onClick={() => setRotationX(x => Math.min(x + 10, 80))}
-                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  className="hidden sm:inline-flex p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="더 눕히기"
                 >
                   ▲
                 </button>
                 <button 
                   onClick={() => setRotationX(x => Math.max(x - 10, 20))}
-                  className="p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
+                  className="hidden sm:inline-flex p-1 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="더 세우기"
                 >
                   ▼
                 </button>
 
-                <div className="w-[1.2px] h-4 bg-slate-800"></div>
+                <div className="w-[1.2px] h-4 bg-slate-850 hidden sm:block"></div>
 
                 {/* Zoom hotkeys */}
                 <button
                   onClick={() => setScaling(s => Math.min(2.5, s + 0.15))}
-                  className="p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
+                  className="hidden sm:inline-flex p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
                   title="확대"
                 >
                   ➕
                 </button>
                 <button
                   onClick={() => setScaling(s => Math.max(0.3, s - 0.15))}
-                  className="p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
+                  className="hidden sm:inline-flex p-1.5 hover:bg-slate-800 text-white rounded-lg text-[9px] font-black cursor-pointer"
                   title="축소"
                 >
                   ➖
                 </button>
+
+                <div className="w-[1.2px] h-4 bg-slate-855 hidden sm:block"></div>
 
                 {/* Reset State View trigger */}
                 <button 
@@ -1327,7 +1411,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
                     setPanY(0);
                     onAnnounce("기본 구조 시야각 및 확대/이동 좌표를 완전 초기화했습니다.");
                   }}
-                  className="p-1.5 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 border border-[#00E5FF]/20 rounded-xl text-[9px] font-black transition-all cursor-pointer"
+                  className="p-1 px-2.5 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 border border-[#00E5FF]/20 rounded-lg text-[9px] font-black transition-all cursor-pointer"
                   title="기본 시야 복원"
                 >
                   리셋
@@ -1335,7 +1419,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
               </div>
 
               {/* Watermark status directly floating on viewport */}
-              <div className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-slate-900/90 border border-slate-800/80 px-3 py-1.5 rounded-xl text-[9px] font-mono font-bold text-slate-400 shadow-md">
+              <div className="hidden sm:flex absolute top-4 left-4 z-30 items-center gap-2 bg-slate-900/90 border border-slate-800/80 px-3 py-1.5 rounded-xl text-[9px] font-mono font-bold text-slate-400 shadow-md">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                 <span className="uppercase tracking-widest text-[#00E5FF]">S-MAP BUILDER: INTERACTIVE</span>
               </div>
@@ -1496,10 +1580,71 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
                 </span>
               </div>
 
+              {/* MOBILE COMPACT DETAIL SHEET OVERLAY */}
+              <AnimatePresence>
+                {isShowMobileSpecs && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 50 }}
+                    className="md:hidden absolute bottom-12 left-3 right-3 z-40 bg-slate-950/95 border border-[#00E5FF]/40 p-4 rounded-2xl shadow-2xl flex flex-col gap-3 backdrop-blur-md text-left"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                      <div className="flex items-center gap-1.5 ">
+                        <span className="text-[10px] bg-cyan-500/20 text-[#00E5FF] px-2 py-0.5 rounded font-black font-sans uppercase">
+                          {selectedFloor}F 편의시설 정보
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setIsShowMobileSpecs(false)}
+                        className="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 overflow-y-auto max-h-[160px] pr-1">
+                      <div className="space-y-1">
+                        <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider">구역 정보</h5>
+                        <p className="text-[11px] text-zinc-300 font-extrabold leading-relaxed">
+                          {DETAILED_3D_FLOORS[selectedFloor].desc}
+                        </p>
+                      </div>
+
+                      <div className="border-t border-slate-900 pt-2 space-y-2">
+                        <div className="text-left space-y-0.5">
+                          <p className="text-[10px] font-black text-blue-400 flex items-center gap-1">
+                            <span>🚻</span>
+                            <span>배리어프리 편의 화장실</span>
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-bold leading-normal">{DETAILED_3D_FLOORS[selectedFloor].toilet}</p>
+                        </div>
+
+                        <div className="text-left space-y-0.5">
+                          <p className="text-[10px] font-black text-cyan-400 flex items-center gap-1">
+                            <span>🛗</span>
+                            <span>승강설비 및 수직 리프트</span>
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-bold leading-normal">{DETAILED_3D_FLOORS[selectedFloor].elevator}</p>
+                        </div>
+
+                        <div className="text-left space-y-0.5">
+                          <p className="text-[10px] font-black text-amber-500 flex items-center gap-1">
+                            <span>⚠️</span>
+                            <span>주의 필요 지면 요철</span>
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-bold leading-normal">{DETAILED_3D_FLOORS[selectedFloor].hazards}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
 
             {/* Right Sidebar: Real Specification & Checklist */}
-            <div className="w-full md:w-80 border-l border-[#1a1a1f] bg-[#0c0c0e] p-5 flex flex-col justify-start space-y-4 overflow-y-auto shrink-0">
+            <div className="hidden md:flex w-full md:w-80 border-l border-[#1a1a1f] bg-[#0c0c0e] p-5 flex flex-col justify-start space-y-4 overflow-y-auto shrink-0">
               
               <div className="bg-[#121215] p-3.5 rounded-2xl border border-zinc-850 space-y-2 text-left">
                 <h4 className="text-[10px] font-black uppercase text-[#00E5FF] tracking-widest leading-none">안심 보도 시스템 상세 규격</h4>
