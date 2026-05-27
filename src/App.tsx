@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Home, Map, Calendar, Ticket, User, Settings, Accessibility } from 'lucide-react';
+import { Home, Map, Calendar, Ticket, User, Settings, Accessibility, Compass, Phone, MessageSquare, Sun } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
@@ -49,6 +49,54 @@ export default function App() {
   const [activeBookings, setActiveBookings] = useState<Booking[]>([]);
   const [syncedTickets, setSyncedTickets] = useState<TicketType[]>([]);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+
+  // Phone launcher simulation states
+  const [isAppLaunched, setIsAppLaunched] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [phoneTime, setPhoneTime] = useState('오후 12:00');
+  const [phoneDate, setPhoneDate] = useState('5월 27일');
+  const [phoneDayOfWeek, setPhoneDayOfWeek] = useState('(수)');
+  const [homeNotification, setHomeNotification] = useState<string | null>(null);
+
+  // Live time ticker for simulated phone
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? '오후' : '오전';
+      hours = hours % 12 || 12;
+      setPhoneTime(`${ampm} ${hours}:${minutes}`);
+      
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      setPhoneDate(`${now.getMonth() + 1}월 ${now.getDate()}일`);
+      setPhoneDayOfWeek(`(${days[now.getDay()]})`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const triggerHomeNotification = (msg: string) => {
+    setHomeNotification(msg);
+    handleAnnounce(`알림: ${msg}`);
+    setTimeout(() => {
+      setHomeNotification((prev) => (prev === msg ? null : prev));
+    }, 4000);
+  };
+
+  const handleLaunchApp = () => {
+    setIsLaunching(true);
+    handleAnnounce("403 BYPASS 앱을 구동합니다. 전산 인프라 및 단말 보안 상태를 점검 중입니다.");
+    setTimeout(() => {
+      setIsAppLaunched(true);
+      setIsLaunching(false);
+      handleAnnounce(currentUser 
+        ? "403 BYPASS 홈 화면 맞춤 추천 공연과 보도 안내맵 환경을 시작합니다." 
+        : "403 BYPASS 앱 구동 완료. 안전 식별 및 우회 통행 로그인 시스템을 기동합니다."
+      );
+    }, 1200);
+  };
 
   // 1. Initial State Hooks
   useEffect(() => {
@@ -341,169 +389,426 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col overflow-x-hidden pb-28 text-center transition-colors duration-300 ${highContrast ? 'high-contrast-mode bg-black' : 'bg-[#0B0F19]'}`}>
+    <div className="min-h-screen w-full bg-[#05070c] flex flex-col md:flex-row items-center justify-center p-3 sm:p-6 lg:p-8 font-sans antialiased text-slate-100 select-none relative overflow-hidden">
       
-      {/* 1. Login session barrier */}
-      {!currentUser && (
-        <LoginPortal
-          onLoginSuccess={handleLoginSuccess}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          highContrast={highContrast}
-        />
-      )}
+      {/* Background Orbs */}
+      <div className="absolute w-[450px] h-[450px] rounded-full bg-blue-900/10 blur-[100px] -top-32 -left-32 pointer-events-none" />
+      <div className="absolute w-[500px] h-[500px] rounded-full bg-cyan-900/5 blur-[120px] -bottom-30 -right-30 pointer-events-none" />
 
-      {/* 2. Main Top Header layout - Removed as requested */}
-
-      {/* 3. Tab Body Container */}
-      {currentUser && (
-        <main className="flex-1 w-full max-w-md mx-auto px-4 py-4 space-y-4">
-          {selectedShowDetail ? (
-            <ShowDetailView
-              show={selectedShowDetail}
-              onBack={() => setSelectedShowDetail(null)}
-              highContrast={highContrast}
-              onAnnounce={handleAnnounce}
-            />
-          ) : (
-            <>
-              {activeTab === 'home' && (
-                <HomeTab
-                  currentUser={currentUser}
-                  onShowSelect={(show) => {
-                    setSelectedShowDetail(show);
-                    handleAnnounce(`선택하신 추천 공연 [${show.title}]의 무장벽 통합 시야 검측 상세 뷰포트를 활성화하였습니다.`);
-                  }}
-                  onAnnounce={handleAnnounce}
-                  highContrast={highContrast}
-                />
-              )}
-
-              {activeTab === 'mobility' && (
-                <MobilityTab
-                  onAnnounce={handleAnnounce}
-                  highContrast={highContrast}
-                />
-              )}
-
-              {activeTab === 'visibility' && (
-                <VisibilityTab
-                  bookings={activeBookings}
-                  onAddBooking={handleAddBooking}
-                  onCancelBooking={handleCancelBooking}
-                  onAnnounce={handleAnnounce}
-                  highContrast={highContrast}
-                />
-              )}
-
-              {activeTab === 'tickets' && (
-                <TicketsTab
-                  syncedTickets={syncedTickets}
-                  onDeleteTicket={handleDeleteTicket}
-                  onOpenSync={() => setIsSyncOpen(true)}
-                  highContrast={highContrast}
-                />
-              )}
-
-              {activeTab === 'profile' && (
-                <ProfileTab
-                  currentUser={currentUser}
-                  onLogout={handleLogout}
-                  personalReviews={personalReviews}
-                  onAddReview={handleAddReview}
-                  onClearPersonalReviews={handleClearPersonalReviews}
-                  onDeleteReview={handleDeleteReview}
-                  globalReviews={globalReviews}
-                  onAddComment={handleAddComment}
-                  followingIds={followingIds}
-                  onToggleFollow={handleToggleFollow}
-                  onUpdateUserId={handleUpdateUserId}
-                  onAnnounce={handleAnnounce}
-                  highContrast={highContrast}
-                />
-              )}
-            </>
-          )}
-        </main>
-      )}
-
-      {/* 4. Voice Console overlay removed as requested */}
-
-      {/* 5. Bottom Navigation Menu */}
-      {currentUser && (
-        <nav className="hc-card border-t border-slate-800 bg-slate-900/90 backdrop-blur fixed bottom-0 left-0 right-0 z-40 transition-colors duration-200">
-          <div className="max-w-md mx-auto py-2 px-1 flex items-center justify-evenly">
-            <button
-              onClick={() => handleTabChange('home')}
-              className={`nav-tab-btn flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'home' ? 'text-blue-500' : 'text-slate-400'
-              }`}
-            >
-              <Home className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">홈</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('mobility')}
-              className={`nav-tab-btn flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'mobility' ? 'text-blue-500' : 'text-slate-400'
-              }`}
-            >
-              <Map className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">안내맵</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('visibility')}
-              className={`nav-tab-btn flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'visibility' ? 'text-blue-500' : 'text-slate-400'
-              }`}
-            >
-              <Calendar className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">매칭예약</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('tickets')}
-              className={`nav-tab-btn flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'tickets' ? 'text-blue-500' : 'text-slate-400'
-              }`}
-            >
-              <Ticket className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">나의티켓</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('profile')}
-              className={`nav-tab-btn flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'profile' ? 'text-blue-500' : 'text-slate-400'
-              }`}
-            >
-              <User className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">마이</span>
-            </button>
-          </div>
-        </nav>
-      )}
-
-      {/* Floating Accessibility Center (접근성센터) */}
-      {currentUser && (
-        <div className="fixed bottom-20 right-4 md:right-[calc(50vw-210px)] z-50">
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] rounded-full shadow-[0_4px_22px_rgba(37,99,235,0.5)] border border-blue-500/20 active:scale-95 transition-all cursor-pointer relative"
-            aria-label="접근성 센터 설정"
-          >
-            <Settings className="w-3.5 h-3.5 animate-spin-slow" />
-            <span className="font-sans font-bold">접근성센터</span>
-            <span className="absolute -top-1 -right-1 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-            </span>
-          </button>
+      {/* Side Content Panel (Visible on Desktop Screen devices) */}
+      <div className="hidden lg:flex flex-col max-w-[340px] mr-10 text-left space-y-6 z-10 select-text">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black tracking-wider uppercase w-fit">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+          <span>Universal Sandbox Simulator</span>
         </div>
-      )}
+        
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight leading-tight">
+            403 BYPASS<br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">무장벽 모빌리티</span>
+          </h1>
+          <p className="mt-2 text-slate-400 text-xs leading-relaxed">
+            모두를 만족시키는 배리어프리 공연 관람 지원 플랫폼입니다. 3D 안내맵, 실시간 혼잡 통계, 동행 매니징, 그리고 AR 자막안경 제어 모듈을 인터랙티브하게 체험해 보세요.
+          </p>
+        </div>
+        
+        <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl space-y-3">
+          <h4 className="text-[11px] font-black text-slate-300 tracking-wider uppercase">📲 사용법 안내</h4>
+          <ul className="space-y-2 text-[11.5px] text-slate-400 leading-normal list-disc pl-4">
+            <li>스마트폰 화면 중앙의 <span className="text-cyan-400 font-bold">403 BYPASS</span> 앱 아이콘을 터치하여 실행시킵니다.</li>
+            <li>기기 하단의 메인 <strong>홈 바(Home Bar)</strong> 영역을 터치해 다시 폰 홈 화면으로 언제든 나갈 수 있습니다.</li>
+            <li>앱 구동 후 우측의 <strong>접근성센터</strong>를 이용해 가변 텍스트 크기 스케일을 조절해 보실 수 있습니다.</li>
+          </ul>
+        </div>
 
-      {/* 6. Modals */}
+        <div className="flex items-center space-x-1.5 text-zinc-500 text-[10px] font-mono">
+          <span>SECURE APP NODE v3.5.0</span>
+          <span>•</span>
+          <span>SYSTEM CALM</span>
+        </div>
+      </div>
+
+      {/* 2. Interactive Mobile Device Frame wrapper */}
+      <div className="relative w-full max-w-[400px] h-[820px] max-h-[94vh] sm:rounded-[52px] sm:border-[12px] sm:border-slate-900 sm:shadow-[0_24px_55px_-12px_rgba(0,0,0,0.85)] bg-slate-950 flex flex-col overflow-hidden">
+        
+        {/* Status Bar */}
+        <div className="h-8 px-5 flex items-center justify-between text-[11px] font-sans font-bold z-50 text-slate-300 select-none bg-black/10 relative shrink-0">
+          <span>{phoneTime.replace(/오전 |오후 /, '')}</span>
+          {/* Dynamic Island style Notch */}
+          <div className="w-24 h-[18px] bg-black rounded-full absolute left-1/2 -to-1.5 -translate-x-1/2 top-1.5 flex items-center justify-center overflow-hidden border border-slate-900/50 z-50">
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-900/90 border border-zinc-800 absolute right-4" />
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[10px]">5G</span>
+            <div className="flex items-center space-x-0.5">
+              <span className="text-[10px]">98%</span>
+              <div className="w-5 h-2.5 rounded-sm border border-current p-0.5 flex items-center opacity-80">
+                <div className="h-full w-[85%] bg-current rounded-2xs" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Home Screen (isAppLaunched = false) */}
+        {!isAppLaunched && (
+          <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-indigo-950 to-blue-950 select-none overflow-hidden flex flex-col justify-between pt-8">
+            {/* Ambient Background Glows */}
+            <div className="absolute w-52 h-52 rounded-full bg-blue-500/10 blur-3xl -top-10 -left-10 animate-pulse pointer-events-none" />
+            <div className="absolute w-56 h-56 rounded-full bg-cyan-400/5 blur-3xl bottom-10 right-10 pointer-events-none" />
+
+            {/* Custom Sliding Home Notification Banner (simulated toast) */}
+            {homeNotification && (
+              <motion.div 
+                initial={{ y: -60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -60, opacity: 0 }}
+                className="absolute top-10 left-3 right-3 p-3 bg-slate-900/95 border border-slate-800 rounded-2xl shadow-xl z-50 flex items-start gap-2.5 text-left"
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-400 mt-1.5 shrink-0 animate-ping" />
+                <div className="space-y-0.5 flex-1">
+                  <h5 className="text-[10px] uppercase font-black text-blue-400 tracking-wider">알림 센터 수신</h5>
+                  <p className="text-[11px] font-medium text-slate-200 leading-normal">{homeNotification}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Clock & Date Widget */}
+            <div className="px-6 mt-10 text-center z-10">
+              <h2 className="text-4xl font-extrabold tracking-tight text-white/95 font-sans drop-shadow-sm">
+                {phoneTime.replace(/오전 |오후 /, '')}
+              </h2>
+              <p className="text-xs font-bold text-slate-300 mt-1.5 filter drop-shadow">
+                {phoneDate} {phoneDayOfWeek}
+              </p>
+              
+              {/* Event Widget */}
+              <div className="mt-8 p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-between text-left">
+                <div className="space-y-0.5">
+                  <div className="flex items-center space-x-1.5">
+                    <Sun className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span className="text-[10px] font-bold text-slate-350 text-slate-305">오늘의 관람 날씨</span>
+                  </div>
+                  <p className="text-[14px] font-black font-sans text-white">수원시 22°C</p>
+                  <p className="text-[9px] text-cyan-400 font-bold">배리어프리 지수 양호 🟢</p>
+                </div>
+                <div className="text-right leading-tight">
+                  <span className="text-[9px] bg-cyan-500/25 text-cyan-300 px-2 py-0.5 rounded-full font-bold border border-cyan-500/20">
+                    D-Day
+                  </span>
+                  <span className="text-[11px] font-black block mt-2 text-white">무장벽제 투어</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Launcher Apps Grid */}
+            <div className="px-6 py-6 z-10">
+              <div className="grid grid-cols-4 gap-x-3 gap-y-5">
+                
+                {/* Custom app icon for 403 BYPASS */}
+                <button 
+                  onClick={handleLaunchApp} 
+                  className="flex flex-col items-center justify-center gap-1.5 col-span-1 focus:outline-none focus:ring-0 active:scale-90 transition-transform group"
+                >
+                  <div className="w-12 h-12 rounded-[14px] bg-gradient-to-tr from-blue-600 via-cyan-500 to-cyan-400 flex items-center justify-center shadow-[0_5px_15px_rgba(6,182,212,0.4)] relative border border-cyan-400/20 group-hover:scale-105 active:scale-95 transition-all">
+                    <span className="text-white font-black text-base tracking-tighter">403</span>
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border border-slate-950 shadow-md">
+                      3
+                    </span>
+                    <span className="absolute inset-0 rounded-[14px] border border-white/20 animate-pulse pointer-events-none" />
+                  </div>
+                  <span className="text-[10px] font-black text-white text-center tracking-tight truncate w-full filter drop-shadow">
+                    403 BYPASS
+                  </span>
+                </button>
+
+                {/* S-MAP app icon */}
+                <button 
+                  onClick={() => triggerHomeNotification('S-MAP 실시간 3D 도면 기능은 403 BYPASS 앱 실행 후 [안내맵] 탭에서 구동할 수 있습니다.')} 
+                  className="flex flex-col items-center justify-center gap-1.5 col-span-1 focus:outline-none focus:ring-0 active:scale-90 transition-transform group"
+                >
+                  <div className="w-12 h-12 rounded-[14px] bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-all">
+                    <Map className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
+                    보행 안내맵
+                  </span>
+                </button>
+
+                {/* Matching Helper App */}
+                <button 
+                  onClick={() => triggerHomeNotification('1대1 매니저 동행 및 수어 상담 안심 예약은 403 BYPASS 앱을 먼저 실행하고 신청해 주십시오.')} 
+                  className="flex flex-col items-center justify-center gap-1.5 col-span-1 focus:outline-none focus:ring-0 active:scale-90 transition-transform group"
+                >
+                  <div className="w-12 h-12 rounded-[14px] bg-gradient-to-tr from-emerald-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-all">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
+                    예약 매칭
+                  </span>
+                </button>
+
+                {/* AR Cam App Icon */}
+                <button 
+                  onClick={() => triggerHomeNotification('실시간 카메라 장애물 탐소 센싱 장치는 403 BYPASS 앱 내 전용 카메라 스코프에서 즉치 구동 전송됩니다.')} 
+                  className="flex flex-col items-center justify-center gap-1.5 col-span-1 focus:outline-none focus:ring-0 active:scale-90 transition-transform group"
+                >
+                  <div className="w-12 h-12 rounded-[14px] bg-gradient-to-tr from-fuchsia-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-all">
+                    <Accessibility className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
+                    안심 렌즈
+                  </span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* Bottom Dock */}
+            <div className="mx-4 mb-6 p-3 rounded-[28px] bg-white/10 border border-white/5 backdrop-blur-xl flex items-center justify-around z-10 shadow-lg">
+              <button 
+                onClick={() => triggerHomeNotification('비상 가설 통행 전산 상담국 연결 준비 완료 상태입니다.')} 
+                className="focus:outline-none focus:ring-0 active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-[#34C759] flex items-center justify-center shadow">
+                  <Phone className="w-5 h-5 text-white" />
+                </div>
+              </button>
+              <button 
+                onClick={() => triggerHomeNotification('실시간 무장벽 예술 포럼 채널은 현재 점검 동화 중입니다.')} 
+                className="focus:outline-none focus:ring-0 active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-[#00E5FF] flex items-center justify-center shadow">
+                  <Compass className="w-5 h-5 text-slate-950" />
+                </div>
+              </button>
+              <button 
+                onClick={() => triggerHomeNotification('서포터 1대1 무벽 안심 메신저 보드가 승인 준비 중입니다.')} 
+                className="focus:outline-none focus:ring-0 active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-amber-400 flex items-center justify-center shadow">
+                  <MessageSquare className="w-5 h-5 text-slate-800" />
+                </div>
+              </button>
+              <button 
+                onClick={() => setIsSettingsOpen(true)} 
+                className="focus:outline-none focus:ring-0 active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-zinc-700/80 border border-zinc-650 flex items-center justify-center shadow">
+                  <Settings className="w-5 h-5 text-white" />
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Launch screen loading splash */}
+        {isLaunching && (
+          <div className="absolute inset-0 bg-[#0B0F19] z-50 flex flex-col items-center justify-center select-none text-center">
+            <div className="space-y-6">
+              <div className="relative flex items-center justify-center mx-auto">
+                <div className="absolute w-20 h-20 rounded-full bg-cyan-500/20 animate-ping pointer-events-none" />
+                <div className="w-16 h-16 rounded-[22px] bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.4)]">
+                  <span className="text-white font-black text-xl tracking-wide">403</span>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-sm font-black text-white tracking-widest">403 BYPASS</h3>
+                <p className="text-[10px] text-cyan-400 font-bold tracking-wider uppercase flex items-center justify-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  CONNECTING SYSTEM NODE...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. The Main App Inner Container (isAppLaunched = true) */}
+        {isAppLaunched && (
+          <div className={`flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-300 ${highContrast ? 'high-contrast-mode bg-black' : 'bg-[#0B0F19]'}`}>
+            
+            {/* Scrollable Main Area representing the original page */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 relative select-text scrollbar-none h-[calc(100%-32px)]">
+              {/* 1. Login session barrier */}
+              {!currentUser ? (
+                <LoginPortal
+                  onLoginSuccess={handleLoginSuccess}
+                  onOpenSettings={() => setIsSettingsOpen(true)}
+                  highContrast={highContrast}
+                />
+              ) : (
+                /* Tab content inside custom main */
+                <main className="w-full px-4 py-4 space-y-4">
+                  {selectedShowDetail ? (
+                    <ShowDetailView
+                      show={selectedShowDetail}
+                      onBack={() => setSelectedShowDetail(null)}
+                      highContrast={highContrast}
+                      onAnnounce={handleAnnounce}
+                    />
+                  ) : (
+                    <>
+                      {activeTab === 'home' && (
+                        <HomeTab
+                          currentUser={currentUser}
+                          onShowSelect={(show) => {
+                            setSelectedShowDetail(show);
+                            handleAnnounce(`선택하신 추천 공연 [${show.title}]의 무장벽 통합 시야 검측 상세 뷰포트를 활성화하였습니다.`);
+                          }}
+                          onAnnounce={handleAnnounce}
+                          highContrast={highContrast}
+                        />
+                      )}
+
+                      {activeTab === 'mobility' && (
+                        <MobilityTab
+                          onAnnounce={handleAnnounce}
+                          highContrast={highContrast}
+                        />
+                      )}
+
+                      {activeTab === 'visibility' && (
+                        <VisibilityTab
+                          bookings={activeBookings}
+                          onAddBooking={handleAddBooking}
+                          onCancelBooking={handleCancelBooking}
+                          onAnnounce={handleAnnounce}
+                          highContrast={highContrast}
+                        />
+                      )}
+
+                      {activeTab === 'tickets' && (
+                        <TicketsTab
+                          syncedTickets={syncedTickets}
+                          onDeleteTicket={handleDeleteTicket}
+                          onOpenSync={() => setIsSyncOpen(true)}
+                          highContrast={highContrast}
+                        />
+                      )}
+
+                      {activeTab === 'profile' && (
+                        <ProfileTab
+                          currentUser={currentUser}
+                          onLogout={handleLogout}
+                          personalReviews={personalReviews}
+                          onAddReview={handleAddReview}
+                          onClearPersonalReviews={handleClearPersonalReviews}
+                          onDeleteReview={handleDeleteReview}
+                          globalReviews={globalReviews}
+                          onAddComment={handleAddComment}
+                          followingIds={followingIds}
+                          onToggleFollow={handleToggleFollow}
+                          onUpdateUserId={handleUpdateUserId}
+                          onAnnounce={handleAnnounce}
+                          highContrast={highContrast}
+                        />
+                      )}
+                    </>
+                  )}
+                </main>
+              )}
+            </div>
+
+            {/* Simulated Bottom App Navigation Bar */}
+            {currentUser && !selectedShowDetail && (
+              <nav className="absolute bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-900/90 backdrop-blur transition-colors duration-200">
+                <div className="py-2.5 px-1 flex items-center justify-around">
+                  <button
+                    onClick={() => handleTabChange('home')}
+                    className={`nav-tab-btn flex flex-col items-center justify-center py-1 px-2 text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'home' ? 'text-blue-500' : 'text-slate-400'
+                    }`}
+                  >
+                    <Home className="w-5 h-5 mb-0.5" />
+                    <span>홈</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTabChange('mobility')}
+                    className={`nav-tab-btn flex flex-col items-center justify-center py-1 px-2 text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'mobility' ? 'text-blue-500' : 'text-slate-400'
+                    }`}
+                  >
+                    <Map className="w-5 h-5 mb-0.5" />
+                    <span>안내맵</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTabChange('visibility')}
+                    className={`nav-tab-btn flex flex-col items-center justify-center py-1 px-2 text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'visibility' ? 'text-blue-500' : 'text-slate-400'
+                    }`}
+                  >
+                    <Calendar className="w-5 h-5 mb-0.5" />
+                    <span>매칭예약</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTabChange('tickets')}
+                    className={`nav-tab-btn flex flex-col items-center justify-center py-1 px-2 text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'tickets' ? 'text-blue-500' : 'text-slate-400'
+                    }`}
+                  >
+                    <Ticket className="w-5 h-5 mb-0.5" />
+                    <span>나의티켓</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTabChange('profile')}
+                    className={`nav-tab-btn flex flex-col items-center justify-center py-1 px-2 text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'profile' ? 'text-blue-500' : 'text-slate-400'
+                    }`}
+                  >
+                    <User className="w-5 h-5 mb-0.5" />
+                    <span>마이</span>
+                  </button>
+                </div>
+              </nav>
+            )}
+
+            {/* Accessibility Floating Button */}
+            {currentUser && (
+              <div className="absolute bottom-18 right-4 z-40">
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] rounded-full shadow-lg border border-blue-500/20 active:scale-95 transition-all cursor-pointer relative"
+                  aria-label="접근성 센터 설정"
+                >
+                  <Settings className="w-3.5 h-3.5 animate-spin-slow" />
+                  <span className="font-sans font-bold">접근성센터</span>
+                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                  </span>
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* 4. Realistic iOS Bottom Home Indicator capsule pill */}
+        <div 
+          onClick={() => {
+            if (isAppLaunched) {
+              setIsAppLaunched(false);
+              handleAnnounce("403 BYPASS 앱을 잠시 닫고 멀티태스킹 단말 홈 화면으로 복귀하였습니다.");
+            }
+          }}
+          className="h-5 shrink-0 bg-slate-950 flex items-center justify-center cursor-pointer select-none border-t border-slate-900 relative group z-50"
+          title="홈 화면으로 나가려면 터치하세요"
+        >
+          <div className="w-32 h-1 bg-white/35 rounded-full group-hover:bg-white/60 active:scale-x-95 transition-all" />
+          {/* Subtle pop tooltip to invite the user */}
+          {isAppLaunched && (
+            <span className="absolute opacity-0 group-hover:opacity-100 bottom-5 bg-slate-900 border border-slate-800 text-[9px] font-bold text-zinc-350 px-2 py-1 rounded-lg pointer-events-none transition-opacity duration-205 z-50">
+              💡 클릭 시 모바일 홈 화면으로 탈출합니다
+            </span>
+          )}
+        </div>
+
+      </div>
+
+      {/* 5. Real Overlay Modals */}
       <AlertModal
         isOpen={isAlertOpen}
         message={alertMessage}
@@ -532,6 +837,7 @@ export default function App() {
         onSyncComplete={handleSyncTicketComplete}
         highContrast={highContrast}
       />
+      
     </div>
   );
 }

@@ -197,7 +197,7 @@ export default function VisibilityTab({
   const activeTabItems = categorizedBookings[activeBookingTab];
 
   // Helper function to render a single booking card cleanly
-  const renderBookingCard = (b: Booking) => {
+  const renderBookingCard = (b: Booking, idx: number) => {
     const dday = getBookingDDayInfo(b.date);
     const isManager = b.type === 'manager';
     const typeLabel = isManager ? '동행 매니저 1:1 안심매칭' : 'AR 자막안경 스마트 대여';
@@ -213,7 +213,7 @@ export default function VisibilityTab({
 
     return (
       <div
-        key={b.id}
+        key={`${b.id}_${b.type}_${idx}`}
         className={`border rounded-2xl p-4 flex flex-col justify-between gap-3 shadow transition-all hover:border-slate-700/85 ${cardBorder}`}
       >
         <div className="flex items-start justify-between gap-2">
@@ -800,7 +800,7 @@ export default function VisibilityTab({
                         </h4>
                       </div>
                       <div className="space-y-2">
-                        {managerItems.map((b) => renderBookingCard(b))}
+                        {managerItems.map((b, idx) => renderBookingCard(b, idx))}
                       </div>
                     </div>
                   )}
@@ -815,7 +815,7 @@ export default function VisibilityTab({
                         </h4>
                       </div>
                       <div className="space-y-2">
-                        {glassItems.map((b) => renderBookingCard(b))}
+                        {glassItems.map((b, idx) => renderBookingCard(b, idx))}
                       </div>
                     </div>
                   )}
