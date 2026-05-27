@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { LogOut, Tag, Search, Users, MessageSquare } from 'lucide-react';
-import { ReviewLog, Comment } from '../types';
+import { ReviewLog, Comment, UserProfile } from '../types';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface ProfileTabProps {
-  currentUser: { email: string; name: string; userId: string; role: string; avatarUrl?: string };
+  currentUser: UserProfile;
   onLogout: () => void;
   personalReviews: any[];
   onAddReview: (review: { show: string; rating: number; text: string }) => void;
@@ -103,18 +103,18 @@ export default function ProfileTab({
           userId: docData.userId,
           name: docData.name,
           role: docData.role,
-          type: docData.role === '장애인 당사자' ? '♿ 동행 희망' : docData.role === '서포터즈' ? '🤝 보조 헬퍼' : '🎭 일반 관람',
+          type: docData.role === '동행 필요 관객' ? '♿ 동행 희망' : docData.role === '서포터즈' ? '🤝 보조 헬퍼' : '🎭 일반 관람',
           avatarUrl: docData.avatarUrl
         });
       } else {
         // Fallback search to find static ones if any
         let found: any = null;
         if (qStr === 'art_pioneer' || qStr === '백예람') {
-          found = { userId: 'art_pioneer', name: '백예람', role: '장애인 당사자', type: '♿ 동행 희망' };
+          found = { userId: 'art_pioneer', name: '백예람', role: '동행 필요 관객', type: '♿ 동행 희망' };
         } else if (qStr === 'culture_helper' || qStr === '김지민') {
           found = { userId: 'culture_helper', name: '김지민', role: '서포터즈', type: '🤝 보조 헬퍼' };
         } else if (qStr === 'wheel_champion' || qStr === '박정우') {
-          found = { userId: 'wheel_champion', name: '박정우', role: '장애인 당사자', type: '♿ 동행 희망' };
+          found = { userId: 'wheel_champion', name: '박정우', role: '동행 필요 관객', type: '♿ 동행 희망' };
         }
 
         if (found) {
@@ -324,36 +324,26 @@ export default function ProfileTab({
         </div>
       ) : (
         <div className="space-y-4 text-left">
-          {/* Change ID Handle */}
+          {/* Change ID Handle - Locked as requested */}
           <div className="hc-card rounded-2xl p-4 bg-slate-900 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-slate-300 uppercase flex items-center gap-1.5">
                 <Tag className="w-4 h-4 text-blue-400" />
-                나의 고유 아벨라 ID 설정
+                나의 고유 계정 ID (수정 불가)
               </h4>
-              <span className="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/25 px-1.5 py-0.5 rounded font-black font-mono">
-                @{currentUser.userId}
+              <span className="text-[9px] bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/25 px-1.5 py-0.5 rounded font-black font-mono">
+                🔒 고유 식별자 고정됨
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="relative flex items-center flex-1">
-                <span className="absolute left-3 text-xs text-slate-500 font-bold">@</span>
-                <input
-                  type="text"
-                  value={newUserId}
-                  onChange={(e) => setNewUserId(e.target.value)}
-                  placeholder="아이디를 정해주세요 (영문/숫자)"
-                  className="w-full text-xs bg-slate-950 text-white rounded-xl border border-slate-800 pl-7 pr-3 py-2.5 focus:border-cyan-500 focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={handleUpdateId}
-                className="hc-button-primary bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-black px-4 py-2.5 rounded-xl transition-all shrink-0"
-              >
-                변경 저장
-              </button>
+            <div className="p-3 bg-slate-950 border border-slate-850 rounded-xl flex items-center justify-between font-mono text-xs">
+              <span className="text-slate-500">USER HANDLE</span>
+              <span className="text-white font-black text-sm">@{currentUser.userId}</span>
             </div>
+            
+            <p className="text-[10px] text-slate-400 leading-normal pl-1">
+              💡 다른 회원과의 소통과 식별을 위해 가입 후 고유 ID는 변경하실 수 없습니다.
+            </p>
           </div>
 
           {/* Social Network Search */}

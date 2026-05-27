@@ -86,7 +86,7 @@ export default function ShowDetailView({
       const dy = mvEv.clientY - dragStartRef.current.y;
 
       if (actualMode === 'rotate') {
-        const targetRotZ = dragStartRef.current.rotZ + dx * 0.65;
+        const targetRotZ = dragStartRef.current.rotZ - dx * 0.65;
         const targetRotX = Math.max(-45, Math.min(45, dragStartRef.current.rotX - dy * 0.55));
         setRotationZ(targetRotZ);
         setRotationX(targetRotX);
@@ -149,7 +149,7 @@ export default function ShowDetailView({
     const dy = touch.clientY - dragStartRef.current.y;
 
     if (dragMode === 'rotate') {
-      const targetRotZ = dragStartRef.current.rotZ + dx * 0.7;
+      const targetRotZ = dragStartRef.current.rotZ - dx * 0.7;
       const targetRotX = Math.max(-45, Math.min(45, dragStartRef.current.rotX - dy * 0.6));
       setRotationZ(targetRotZ);
       setRotationX(targetRotX);
@@ -365,7 +365,7 @@ export default function ShowDetailView({
         {/* 3D Drag HUD helper guide banner */}
         <div className="p-3 rounded-2xl bg-slate-900/50 border border-slate-800 text-slate-400 text-[10px] flex items-center justify-between gap-2 leading-relaxed">
           <span>
-            💡 <strong className="text-cyan-400">배치도 조작:</strong> 배치도를 <strong>드래그</strong>하여 상하좌우 이동 및 시야 각도를 변경하고, 마우스 휠이나 스마트폰 핀치 줌으로 확대하세요!
+            💡 드래그하여 각도를 <strong>회전</strong>하고, 마우스 휠이나 핀치 줌으로 <strong>확대</strong>하세요!
           </span>
           <button 
             onClick={() => {

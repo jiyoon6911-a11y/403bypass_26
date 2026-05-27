@@ -56,7 +56,7 @@ export default function TicketsTab({
                   🎫 외부 예매처 티켓 연동 (시뮬레이터)
                 </h4>
                 <p className="text-[9.5px] text-slate-400 leading-normal">
-                  인터파크 티켓, YES24 등 타 예매처에서 결제한 내역을 403 BYPASS에 연계 연동하여 모바일 자막 안경 연계 및 휠체어석 보행 지원 가이드를 안전 탑재합니다.
+                  인터파크, YES24 등 타사에서 예매한 내역을 연동하여 모바일 자막 안경 및 휠체어 전용 편의 설정을 구성합니다.
                 </p>
               </div>
             </div>

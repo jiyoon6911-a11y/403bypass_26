@@ -5,7 +5,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 
-import { Show, Booking, Ticket as TicketType, ReviewLog } from './types';
+import { Show, Booking, Ticket as TicketType, ReviewLog, UserProfile } from './types';
 import { SHOWS_DATA, INITIAL_GLOBAL_REVIEWS } from './data';
 
 // Subcomponents
@@ -25,7 +25,7 @@ import ShowDetailView from './components/ShowDetailView';
 
 export default function App() {
   // Session states
-  const [currentUser, setCurrentUser] = useState<{ email: string; name: string; userId: string; role: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   // Layout states
   const [activeTab, setActiveTab] = useState<'home' | 'mobility' | 'visibility' | 'tickets' | 'profile'>('home');
@@ -180,7 +180,7 @@ export default function App() {
   };
 
   // Data operations
-  const handleLoginSuccess = (userObj: { email: string; name: string; userId: string; role: string }) => {
+  const handleLoginSuccess = (userObj: UserProfile) => {
     setCurrentUser(userObj);
     handleAnnounce(`${userObj.name} 님이 안전하게 검증 패싱 로그인 성공 완료되었습니다.`);
   };
@@ -352,24 +352,7 @@ export default function App() {
         />
       )}
 
-      {/* 2. Main Top Header layout */}
-      {currentUser && (
-        <header className="hc-card border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 transition-colors duration-200">
-          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-center">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <span className="text-white font-black text-sm tracking-widest">403</span>
-              </div>
-              <div className="leading-tight text-left">
-                <h1 className="hc-accent text-sm font-black tracking-wider text-blue-500 flex items-center gap-1">
-                  BYPASS 
-                  <span className="hc-badge px-1.5 py-0.5 rounded text-[8px] bg-cyan-500/10 text-cyan-400 font-bold border border-cyan-500/30">UNIVERSAL</span>
-                </h1>
-              </div>
-            </div>
-          </div>
-        </header>
-      )}
+      {/* 2. Main Top Header layout - Removed as requested */}
 
       {/* 3. Tab Body Container */}
       {currentUser && (
@@ -385,6 +368,7 @@ export default function App() {
             <>
               {activeTab === 'home' && (
                 <HomeTab
+                  currentUser={currentUser}
                   onShowSelect={(show) => {
                     setSelectedShowDetail(show);
                     handleAnnounce(`선택하신 추천 공연 [${show.title}]의 무장벽 통합 시야 검측 상세 뷰포트를 활성화하였습니다.`);

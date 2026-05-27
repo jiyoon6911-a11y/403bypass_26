@@ -336,7 +336,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
       const dy = mvEv.clientY - dragStartRef.current.y;
 
       if (actualMode === 'rotate') {
-        const targetRotZ = dragStartRef.current.rotZ + dx * 0.55;
+        const targetRotZ = dragStartRef.current.rotZ - dx * 0.55;
         const targetRotX = Math.max(15, Math.min(85, dragStartRef.current.rotX - dy * 0.45));
         setRotationZ(targetRotZ);
         setRotationX(targetRotX);
@@ -400,7 +400,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
     const dy = touch.clientY - dragStartRef.current.y;
 
     if (dragMode === 'rotate') {
-      const targetRotZ = dragStartRef.current.rotZ + dx * 0.6;
+      const targetRotZ = dragStartRef.current.rotZ - dx * 0.6;
       const targetRotX = Math.max(15, Math.min(85, dragStartRef.current.rotX - dy * 0.5));
       setRotationZ(targetRotZ);
       setRotationX(targetRotX);
@@ -1024,9 +1024,9 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
           ))}
         </div>
 
-        <div className="p-3.5 bg-[#0b0c10] rounded-xl border border-slate-850/90 text-left">
+        <div className="p-3 bg-[#0b0c10] rounded-xl border border-slate-850/90 text-left">
           <p className="text-[10px] text-zinc-400 font-sans font-bold leading-relaxed">
-            💡 <strong className="text-cyan-400">보도 안내 팁:</strong> 개별 구역 카드를 터치하면 현재 밀집 실시간 가설 현황과 전동 휠체어 전후 회전 반경 확보용 음성 보도 가이드를 즉치 전송 탑청해 드립니다.
+            💡 카드를 터치하면 구역별 밀집 현황과 휠체어 회전반경 가이드를 음성으로 안내합니다.
           </p>
         </div>
       </div>
@@ -1090,9 +1090,9 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
         </div>
 
         {/* Informative text specification listing for Selected Floor features */}
-        <div className="p-3 bg-slate-950 rounded-xl border border-slate-850">
+        <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-850">
           <p className="text-[10px] text-slate-400 leading-normal font-sans text-center font-bold">
-            💡 위 버튼을 터치하시면 <span className="text-[#00E5FF]">건물 3D 도면만이 집중 표기되는 고급 스크린 인터페이스</span>로 완벽 확장 진입합니다.
+            💡 버튼을 누르면 건물 3D 정밀 도면 뷰어가 전체 화면으로 실행됩니다.
           </p>
         </div>
       </div>
@@ -1572,11 +1572,8 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
 
               {/* Viewport helper info banner */}
               <div className="text-[10px] font-mono text-slate-400 bg-slate-950/80 p-2 border border-slate-900 rounded-2xl text-center leading-relaxed max-w-lg mx-auto w-full z-10 flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span className="text-cyan-400 font-bold">💡 S-MAP 뷰어 조작:</span>
-                <span className="text-center sm:text-left">
-                  {dragMode === 'rotate' ? '마우스 좌클릭 후 드래그 = 3D 각도 회전' : '마우스 좌클릭 후 드래그 = 도면 위치 이동(Pan)'} 
-                  <span className="text-zinc-600"> | </span> 
-                  휠 스크롤/모바일 핀치 = 돋보기 줌
+                <span>
+                  💡 <strong>화면 드래그:</strong> {dragMode === 'rotate' ? '각도 회전' : '도면 이동'} | <strong>휠/핀치:</strong> 확대·축소
                 </span>
               </div>
 

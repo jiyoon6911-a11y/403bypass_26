@@ -1,3 +1,13 @@
+export interface UserProfile {
+  email: string;
+  name: string;
+  userId: string;
+  role: string;
+  avatarUrl?: string;
+  favoriteGenres?: string[];
+  requiredSupports?: string[];
+}
+
 export interface Comment {
   id: number;
   authorId: string;

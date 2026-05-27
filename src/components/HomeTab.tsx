@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Sparkles, Award, Megaphone, Search, X, Mic, Eye } from 'lucide-react';
-import { Show } from '../types';
+import { Sparkles, Award, Megaphone, Search, X, Mic, Eye, Target } from 'lucide-react';
+import { Show, UserProfile } from '../types';
 import { SHOWS_DATA } from '../data';
 
 interface HomeTabProps {
+  currentUser?: UserProfile | null;
   onShowSelect: (show: Show) => void;
   onAnnounce: (msg: string) => void;
   highContrast: boolean;
 }
 
-export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: HomeTabProps) {
+export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highContrast }: HomeTabProps) {
   const [selectedGenre, setSelectedGenre] = useState('전체');
   const [isSupporterRegistered, setIsSupporterRegistered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +24,40 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
     { label: '음성 해설', tag: '음성설명', icon: '🎙️', color: 'text-cyan-400' },
     { label: '수어 통역', tag: '수어통역', icon: '👁️', color: 'text-cyan-400' }
   ];
+
+  // Curated personalized recommendations
+  const personalizedShows = React.useMemo(() => {
+    if (!currentUser) return [];
+    const favGenres = currentUser.favoriteGenres || [];
+    const reqSupports = currentUser.requiredSupports || [];
+
+    if (favGenres.length === 0 && reqSupports.length === 0) return [];
+
+    return SHOWS_DATA.map(show => {
+      let score = 0;
+      // Genre Match -> +50 points
+      if (favGenres.includes(show.genre)) {
+        score += 50;
+      }
+      
+      // Accessibility Needs mappings -> +50 points per matching category tags
+      const hasWheelMatch = reqSupports.includes("휠체어 접근 및 리프트") && 
+        show.tags.some(t => ["휠체어석", "경사로통행", "휠체어동행"].includes(t));
+      const hasHearingMatch = reqSupports.includes("청각 지원 자막/수어") && 
+        show.tags.some(t => ["자막제공", "한국어자막", "문자안내", "스크린자막", "수어통역"].includes(t));
+      const hasVisionMatch = reqSupports.includes("시각 음성해설/가이드") && 
+        show.tags.some(t => ["음성해설", "음향증폭루프", "VR연동"].includes(t));
+
+      if (hasWheelMatch) score += 50;
+      if (hasHearingMatch) score += 50;
+      if (hasVisionMatch) score += 50;
+
+      return { show, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.show);
+  }, [currentUser]);
 
   const filteredShows = SHOWS_DATA.filter(show => {
     // 1. Genre filter
@@ -139,6 +174,73 @@ export default function HomeTab({ onShowSelect, onAnnounce, highContrast }: Home
           );
         })}
       </div>
+
+      {/* 🎯 나를 위한 맞춤 추천 공연 (Only if user has favoriteGenres or requiredSupports list) */}
+      {currentUser && ((currentUser.favoriteGenres && currentUser.favoriteGenres.length > 0) || (currentUser.requiredSupports && currentUser.requiredSupports.length > 0)) ? (
+        <div className="space-y-3 bg-gradient-to-b from-[#131d35] to-[#0c1221] border border-cyan-500/25 rounded-2xl p-4.5 shadow-xl text-left">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black text-cyan-300 tracking-wide uppercase flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#00E5FF] animate-bounce-slow" />
+              <span>🎯 나를 위한 맞춤 공연 추천</span>
+            </h3>
+            <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-extrabold border border-cyan-500/20">
+              최적 매칭 중
+            </span>
+          </div>
+
+          {personalizedShows.length === 0 ? (
+            <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                현재 등록하신 관심 장르와 지향 편의 수단 기준에 부합히 작동 예정된 무장벽 공연이 아직 없습니다. 선호 조건을 다른 조합으로 넓혀보세요!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-2">
+              {personalizedShows.slice(0, 3).map((show) => {
+                return (
+                  <div
+                    key={`curated-${show.id}`}
+                    onClick={() => onShowSelect(show)}
+                    className="flex bg-slate-950/60 hover:bg-slate-950 border border-cyan-500/10 hover:border-cyan-400/40 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer group active:scale-[0.99]"
+                  >
+                    <img
+                      src={show.image}
+                      alt={show.title}
+                      className="w-14 h-14 object-cover filter brightness-95 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="p-2.5 flex-1 flex flex-col justify-between">
+                      <div className="space-y-0.5 flex flex-col">
+                        <div className="flex justify-between items-center text-[8px] font-bold text-slate-400">
+                          <span className="bg-cyan-950/40 text-cyan-400 px-1.5 py-0.2 rounded border border-cyan-900/40">
+                            {show.genre}
+                          </span>
+                          <span className="truncate max-w-[180px] font-mono text-slate-500">{show.facility}</span>
+                        </div>
+                        <h4 className="text-[11px] font-black text-white group-hover:text-[#00E5FF] line-clamp-1 leading-snug transition-colors">
+                          {show.title}
+                        </h4>
+                      </div>
+                      <div className="flex items-center justify-between text-[8px] pt-1 border-t border-slate-900/80">
+                        <span className="text-emerald-400 font-bold truncate max-w-[160px]">
+                          💡 Match: {show.tags.filter(t => 
+                            (currentUser.requiredSupports || []).some(req => 
+                              (req === "휠체어 접근 및 리프트" && ["휠체어석", "경사로통행", "휠체어동행"].includes(t)) ||
+                              (req === "청각 지원 자막/수어" && ["자막제공", "한국어자막", "문자안내", "스크린자막", "수어통역"].includes(t)) ||
+                              (req === "시각 음성해설/가이드" && ["음성해설", "음향증폭루프", "VR연동"].includes(t))
+                            )
+                          ).join(', ') || '전체 배리어프리 최적'}
+                        </span>
+                        <span className="font-extrabold text-[#00E5FF] shrink-0">무벽지수 {show.score}%</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Active Performance Cards Section */}
       <div className="space-y-3 pt-1">
