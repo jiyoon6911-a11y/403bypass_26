@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Award, Megaphone, Search, X, Mic, Eye, Target } from 'lucide-react';
 import { Show, UserProfile } from '../types';
 import { SHOWS_DATA } from '../data';
+import { useTranslation } from '../lib/translations';
 
 interface HomeTabProps {
   currentUser?: UserProfile | null;
@@ -11,6 +12,7 @@ interface HomeTabProps {
 }
 
 export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highContrast }: HomeTabProps) {
+  const { t } = useTranslation();
   const [selectedGenre, setSelectedGenre] = useState('전체');
   const [isSupporterRegistered, setIsSupporterRegistered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,22 +83,22 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
 
   const handleGenreClick = (genre: string) => {
     setSelectedGenre(genre);
-    onAnnounce(`예술 장르 필터를 [${genre}] 예술 군으로 성공적으로 재정합하였습니다.`);
+    onAnnounce(t("예술 장르 필터를") + ` [${t(genre)}] ` + t("예술 군으로 성공적으로 재정합하였습니다."));
   };
 
   const handleTagFilterClick = (tag: string) => {
     if (selectedTagFilter === tag) {
       setSelectedTagFilter(null);
-      onAnnounce("무장벽 태그 필터를 해제하여 전체 목록으로 원복하였습니다.");
+      onAnnounce(t("무장벽 태그 필터를 해제하여 전체 목록으로 원복하였습니다."));
     } else {
       setSelectedTagFilter(tag);
-      onAnnounce(`[${tag}] 지원 가능 조건으로 공연을 필터링합니다.`);
+      onAnnounce(`[${t(tag)}]` + t("지원 가능 조건으로 공연을 필터링합니다."));
     }
   };
 
   const handleSupporterApply = () => {
     setIsSupporterRegistered(true);
-    onAnnounce("403 바이패스 서포터즈 1기 참여 원서 접수가 완료되었습니다. 무장벽 가이드 뱃지가 마이페이지에 자동 배포됩니다.");
+    onAnnounce(t("403 바이패스 서포터즈 1기 참여 원서 접수가 완료되었습니다. 무장벽 가이드 뱃지가 마이페이지에 자동 배포됩니다."));
   };
 
   return (
@@ -110,14 +112,14 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="어떤 공연을 찾으시나요?"
+            placeholder={t("어떤 공연을 찾으시나요?")}
             className="w-full text-sm bg-transparent text-white focus:outline-none placeholder-slate-500 font-semibold pr-8"
           />
           {searchQuery ? (
             <button
               onClick={() => {
                 setSearchQuery('');
-                onAnnounce('검색 필터를 초기화해 전체 공연 목록으로 환원했습니다.');
+                onAnnounce(t('검색 필터를 초기화해 전체 공연 목록으로 환원했습니다.'));
               }}
               className="absolute right-12 p-1 text-slate-400 hover:text-white"
             >
@@ -125,9 +127,9 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
             </button>
           ) : null}
           <button 
-            onClick={() => onAnnounce("실시간 보행 음성 보이스 탐색 엔진을 로드하고 있습니다.")}
+            onClick={() => onAnnounce(t("실시간 보행 음성 보이스 탐색 엔진을 로드하고 있습니다."))}
             className="p-1 px-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 transition-all text-[#00E5FF] flex items-center justify-center shrink-0 cursor-pointer"
-            title="음성 검색"
+            title={t("음성 검색")}
           >
             <Mic className="w-4 h-4" />
           </button>
@@ -148,7 +150,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                   : 'border-[#212124] bg-[#121214] text-slate-350 hover:bg-[#1c1c20]'
               }`}
             >
-              {g}
+              {t(g)}
             </button>
           );
         })}
@@ -169,7 +171,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
               }`}
             >
               <span className={`text-xs ${tf.color}`}>{tf.icon}</span>
-              <span>{tf.label}</span>
+              <span>{t(tf.label)}</span>
             </button>
           );
         })}
@@ -181,17 +183,17 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-black text-cyan-300 tracking-wide uppercase flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#00E5FF] animate-bounce-slow" />
-              <span>🎯 나를 위한 맞춤 공연 추천</span>
+              <span>{t("🎯 나를 위한 맞춤 공연 추천")}</span>
             </h3>
             <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-extrabold border border-cyan-500/20">
-              최적 매칭 중
+              {t("최적 매칭 중")}
             </span>
           </div>
 
           {personalizedShows.length === 0 ? (
             <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
               <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                현재 등록하신 관심 장르와 지향 편의 수단 기준에 부합히 작동 예정된 무장벽 공연이 아직 없습니다. 선호 조건을 다른 조합으로 넓혀보세요!
+                {t("현재 등록하신 관심 장르와 지향 편의 수단 기준에 부합히 작동 예정된 무장벽 공연이 아직 없습니다. 선호 조건을 다른 조합으로 넓혀보세요!")}
               </p>
             </div>
           ) : (
@@ -213,7 +215,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                       <div className="space-y-0.5 flex flex-col">
                         <div className="flex justify-between items-center text-[8px] font-bold text-slate-400">
                           <span className="bg-cyan-950/40 text-cyan-400 px-1.5 py-0.2 rounded border border-cyan-900/40">
-                            {show.genre}
+                            {t(show.genre)}
                           </span>
                           <span className="truncate max-w-[180px] font-mono text-slate-500">{show.facility}</span>
                         </div>
@@ -223,15 +225,15 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                       </div>
                       <div className="flex items-center justify-between text-[8px] pt-1 border-t border-slate-900/80">
                         <span className="text-emerald-400 font-bold truncate max-w-[160px]">
-                          💡 Match: {show.tags.filter(t => 
+                          💡 Match: {show.tags.filter(t_tag => 
                             (currentUser.requiredSupports || []).some(req => 
-                              (req === "휠체어 접근 및 리프트" && ["휠체어석", "경사로통행", "휠체어동행"].includes(t)) ||
-                              (req === "청각 지원 자막/수어" && ["자막제공", "한국어자막", "문자안내", "스크린자막", "수어통역"].includes(t)) ||
-                              (req === "시각 음성해설/가이드" && ["음성해설", "음향증폭루프", "VR연동"].includes(t))
+                              (req === "휠체어 접근 및 리프트" && ["휠체어석", "경사로통행", "휠체어동행"].includes(t_tag)) ||
+                              (req === "청각 지원 자막/수어" && ["자막제공", "한국어자막", "문자안내", "스크린자막", "수어통역"].includes(t_tag)) ||
+                              (req === "시각 음성해설/가이드" && ["음성해설", "음향증폭루프", "VR연동"].includes(t_tag))
                             )
-                          ).join(', ') || '전체 배리어프리 최적'}
+                          ).map(x => t(x)).join(', ') || t('전체 배리어프리 최적')}
                         </span>
-                        <span className="font-extrabold text-[#00E5FF] shrink-0">무벽지수 {show.score}%</span>
+                        <span className="font-extrabold text-[#00E5FF] shrink-0">{t("무벽지수")} {show.score}%</span>
                       </div>
                     </div>
                   </div>
@@ -247,17 +249,17 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black text-slate-300 tracking-wide uppercase flex items-center gap-1.5">
             <Award className="w-4 h-4 text-[#00E5FF]" />
-            맞춤 장애인 지원 완비 공연 목록
+            {t("맞춤 장애인 지원 완비 공연 목록")}
           </h3>
           <span className="text-[10px] text-slate-500 font-bold count-badge">
-            {filteredShows.length}개 매칭
+            {filteredShows.length} {t("개 매칭")}
           </span>
         </div>
 
         <div className="space-y-3">
           {filteredShows.length === 0 ? (
             <div className="bg-[#121214] border border-[#212124] rounded-2xl p-8 text-center text-slate-500">
-              <p className="text-xs font-bold">선택하신 조건에 부합하는 공연정보가 없습니다.</p>
+              <p className="text-xs font-bold">{t("선택하신 조건에 부합하는 공연정보가 없습니다.")}</p>
               <button 
                 onClick={() => {
                   setSelectedGenre('전체');
@@ -266,7 +268,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                 }}
                 className="text-[10px] text-[#00E5FF] mt-2 underline font-bold cursor-pointer"
               >
-                전체 조건으로 필터 리셋
+                {t("전체 조건으로 필터 리셋")}
               </button>
             </div>
           ) : (
@@ -293,7 +295,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                       <div className="space-y-0.5">
                         <div className="flex justify-between items-start gap-1">
                           <span className="inline-flex items-center text-[7px] bg-[#00E5FF]/10 text-[#00E5FF] font-bold px-1.5 py-0.5 rounded-full border border-[#00E5FF]/20">
-                            {show.genre}
+                            {t(show.genre)}
                           </span>
                           <span className="text-[9px] font-mono text-slate-400 truncate max-w-[140px]">{show.facility}</span>
                         </div>
@@ -307,8 +309,8 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
 
                       <div className="flex items-center justify-between pt-1">
                         <div className="flex flex-wrap gap-1">
-                          {show.tags.map((t, idx) => {
-                            const isCurrentTagActive = selectedTagFilter === t;
+                          {show.tags.map((tag_item, idx) => {
+                            const isCurrentTagActive = selectedTagFilter === tag_item;
                             return (
                               <span
                                 key={idx}
@@ -318,14 +320,14 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                                     : 'bg-[#1a1a1d] text-slate-300 border-[#222226]'
                                 }`}
                               >
-                                {t}
+                                {t(tag_item)}
                               </span>
                             );
                           })}
                         </div>
                         <div className="text-right shrink-0">
                           <span className="text-[8px] text-slate-500 block uppercase font-mono tracking-widest hc-text-mute">
-                            무벽안심지수
+                            {t("무벽안심지수")}
                           </span>
                           <span className={`text-xs font-black ${indexColorClass}`}>
                             {show.score}%
@@ -352,19 +354,19 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
         {/* Top tag badge */}
         <div>
           <span className="inline-block px-3 py-1 bg-black text-[#00E5FF] text-[10px] font-black rounded-lg uppercase tracking-wider mb-4">
-            공식 홍보대사
+            {t("공식 홍보대사")}
           </span>
           
           {/* Main big display block */}
           <div className="space-y-1.5">
             <h2 className="text-[26px] font-black tracking-tight leading-none text-black font-sans">
-              403 서포터즈
+              {t("403 서포터즈")}
             </h2>
             <h2 className="text-[26px] font-black tracking-tight leading-none text-black font-sans">
-              1기 대모집!
+              {t("1기 대모집!")}
             </h2>
             <p className="text-xs text-black/80 font-bold leading-normal font-sans pt-1">
-              접근성 리뷰하고 리워드 받자
+              {t("접근성 리뷰하고 리워드 받자")}
             </p>
           </div>
         </div>
@@ -382,11 +384,11 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
           >
             {isSupporterRegistered ? (
               <>
-                <span>지원완료 ♿</span>
+                <span>{t("지원완료 ♿")}</span>
               </>
             ) : (
               <>
-                <span>지원하기</span>
+                <span>{t("지원하기")}</span>
               </>
             )}
           </button>

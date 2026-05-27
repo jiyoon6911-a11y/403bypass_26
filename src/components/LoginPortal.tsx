@@ -20,6 +20,7 @@ const PRESET_AVATARS = [
   { emoji: '🎭', label: '아티스트' },
 ];
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
+import appLogo from '../assets/images/bypass_icon_final_1779876138815.png';
 
 interface LoginPortalProps {
   onLoginSuccess: (user: { email: string; name: string; userId: string; role: string; avatarUrl?: string }) => void;
@@ -445,8 +446,13 @@ export default function LoginPortal({ onLoginSuccess, onOpenSettings, highContra
       <div className="max-w-md w-full mx-auto my-auto space-y-6">
         {/* Brand Logo */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-2xl shadow-blue-500/30">
-            <span className="text-white font-black text-2xl tracking-wider">403</span>
+          <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center shadow-2xl shadow-cyan-500/35 overflow-hidden border border-cyan-500/20">
+            <img 
+              src={appLogo} 
+              alt="403 BYPASS Logo" 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-black text-white tracking-wider flex items-center justify-center gap-1.5 hc-accent">

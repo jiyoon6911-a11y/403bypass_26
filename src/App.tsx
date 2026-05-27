@@ -7,6 +7,8 @@ import { auth, db } from './lib/firebase';
 
 import { Show, Booking, Ticket as TicketType, ReviewLog, UserProfile } from './types';
 import { SHOWS_DATA, INITIAL_GLOBAL_REVIEWS } from './data';
+import { LanguageProvider, useTranslation } from './lib/translations';
+import appLogo from './assets/images/bypass_icon_final_1779876138815.png';
 
 // Subcomponents
 import AlertModal from './components/AlertModal';
@@ -24,6 +26,15 @@ import ProfileTab from './components/ProfileTab';
 import ShowDetailView from './components/ShowDetailView';
 
 export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
+  );
+}
+
+function AppContent() {
+  const { t } = useTranslation();
   // Session states
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
@@ -79,7 +90,7 @@ export default function App() {
 
   const triggerHomeNotification = (msg: string) => {
     setHomeNotification(msg);
-    handleAnnounce(`알림: ${msg}`);
+    handleAnnounce(`${t("안내:")} ${msg}`);
     setTimeout(() => {
       setHomeNotification((prev) => (prev === msg ? null : prev));
     }, 4000);
@@ -87,13 +98,13 @@ export default function App() {
 
   const handleLaunchApp = () => {
     setIsLaunching(true);
-    handleAnnounce("403 BYPASS 앱을 구동합니다. 전산 인프라 및 단말 보안 상태를 점검 중입니다.");
+    handleAnnounce(t("403 BYPASS 앱을 구동합니다. 전산 인프라 및 단말 보안 상태를 점검 중입니다."));
     setTimeout(() => {
       setIsAppLaunched(true);
       setIsLaunching(false);
       handleAnnounce(currentUser 
-        ? "403 BYPASS 홈 화면 맞춤 추천 공연과 보도 안내맵 환경을 시작합니다." 
-        : "403 BYPASS 앱 구동 완료. 안전 식별 및 우회 통행 로그인 시스템을 기동합니다."
+        ? t("403 BYPASS 홈 화면 맞춤 추천 공연과 보도 안내맵 환경을 시작합니다.") 
+        : t("403 BYPASS 앱 구동 완료. 안전 식별 및 우회 통행 로그인 시스템을 기동합니다.")
       );
     }, 1200);
   };
@@ -405,19 +416,19 @@ export default function App() {
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight leading-tight">
             403 BYPASS<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">무장벽 모빌리티</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">{t("무장벽 모빌리티")}</span>
           </h1>
           <p className="mt-2 text-slate-400 text-xs leading-relaxed">
-            모두를 만족시키는 배리어프리 공연 관람 지원 플랫폼입니다. 3D 안내맵, 실시간 혼잡 통계, 동행 매니징, 그리고 AR 자막안경 제어 모듈을 인터랙티브하게 체험해 보세요.
+            {t("모두를 만족시키는 배리어프리 공연 관람 지원 플랫폼입니다. 3D 안내맵, 실시간 혼잡 통계, 동행 매니징, 그리고 AR 자막안경 제어 모듈을 인터랙티브하게 체험해 보세요.")}
           </p>
         </div>
         
         <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl space-y-3">
-          <h4 className="text-[11px] font-black text-slate-300 tracking-wider uppercase">📲 사용법 안내</h4>
+          <h4 className="text-[11px] font-black text-slate-300 tracking-wider uppercase">{t("📲 사용법 안내")}</h4>
           <ul className="space-y-2 text-[11.5px] text-slate-400 leading-normal list-disc pl-4">
-            <li>스마트폰 화면 중앙의 <span className="text-cyan-400 font-bold">403 BYPASS</span> 앱 아이콘을 터치하여 실행시킵니다.</li>
-            <li>기기 하단의 메인 <strong>홈 바(Home Bar)</strong> 영역을 터치해 다시 폰 홈 화면으로 언제든 나갈 수 있습니다.</li>
-            <li>앱 구동 후 우측의 <strong>접근성센터</strong>를 이용해 가변 텍스트 크기 스케일을 조절해 보실 수 있습니다.</li>
+            <li>{t("스마트폰 화면 중앙의")} <span className="text-cyan-400 font-bold">403 BYPASS</span> {t("앱 아이콘을 터치하여 실행시킵니다.")}</li>
+            <li>{t("기기 하단의 메인")} <strong>홈 바(Home Bar)</strong> {t("영역을 터치해 다시 폰 홈 화면으로 언제든 나갈 수 있습니다.")}</li>
+            <li>{t("앱 구동 후 우측의")} <strong className="text-blue-400">{t("접근성센터")}</strong>{t("를 이용해 가변 텍스트 크기 스케일을 조절해 보실 수 있습니다.")}</li>
           </ul>
         </div>
 
@@ -466,8 +477,8 @@ export default function App() {
               >
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-400 mt-1.5 shrink-0 animate-ping" />
                 <div className="space-y-0.5 flex-1">
-                  <h5 className="text-[10px] uppercase font-black text-blue-400 tracking-wider">알림 센터 수신</h5>
-                  <p className="text-[11px] font-medium text-slate-200 leading-normal">{homeNotification}</p>
+                  <h5 className="text-[10px] uppercase font-black text-blue-400 tracking-wider">{t("알림 센터 수신")}</h5>
+                  <p className="text-[11px] font-medium text-slate-200 leading-normal">{t(homeNotification)}</p>
                 </div>
               </motion.div>
             )}
@@ -485,17 +496,17 @@ export default function App() {
               <div className="mt-8 p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-between text-left">
                 <div className="space-y-0.5">
                   <div className="flex items-center space-x-1.5">
-                    <Sun className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                    <span className="text-[10px] font-bold text-slate-350 text-slate-305">오늘의 관람 날씨</span>
+                     <Sun className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span className="text-[10px] font-bold text-slate-305">{t("오늘의 관람 날씨")}</span>
                   </div>
-                  <p className="text-[14px] font-black font-sans text-white">수원시 22°C</p>
-                  <p className="text-[9px] text-cyan-400 font-bold">배리어프리 지수 양호 🟢</p>
+                  <p className="text-[14px] font-black font-sans text-white">{t("수원시 22°C")}</p>
+                  <p className="text-[9px] text-cyan-400 font-bold">{t("배리어프리 지수 양호 🟢")}</p>
                 </div>
                 <div className="text-right leading-tight">
                   <span className="text-[9px] bg-cyan-500/25 text-cyan-300 px-2 py-0.5 rounded-full font-bold border border-cyan-500/20">
                     D-Day
                   </span>
-                  <span className="text-[11px] font-black block mt-2 text-white">무장벽제 투어</span>
+                  <span className="text-[11px] font-black block mt-2 text-white">{t("무장벽제 투어")}</span>
                 </div>
               </div>
             </div>
@@ -509,12 +520,14 @@ export default function App() {
                   onClick={handleLaunchApp} 
                   className="flex flex-col items-center justify-center gap-1.5 col-span-1 focus:outline-none focus:ring-0 active:scale-90 transition-transform group"
                 >
-                  <div className="w-12 h-12 rounded-[14px] bg-gradient-to-tr from-blue-600 via-cyan-500 to-cyan-400 flex items-center justify-center shadow-[0_5px_15px_rgba(6,182,212,0.4)] relative border border-cyan-400/20 group-hover:scale-105 active:scale-95 transition-all">
-                    <span className="text-white font-black text-base tracking-tighter">403</span>
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border border-slate-950 shadow-md">
-                      3
-                    </span>
-                    <span className="absolute inset-0 rounded-[14px] border border-white/20 animate-pulse pointer-events-none" />
+                  <div className="w-12 h-12 rounded-[14px] bg-black flex items-center justify-center shadow-[0_5px_15px_rgba(6,182,212,0.4)] relative border border-cyan-400/20 group-hover:scale-105 active:scale-95 transition-all overflow-hidden">
+                    <img 
+                      src={appLogo} 
+                      alt="403 BYPASS App Icon" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute inset-0 rounded-[14px] border border-white/20 animate-pulse pointer-events-none z-10" />
                   </div>
                   <span className="text-[10px] font-black text-white text-center tracking-tight truncate w-full filter drop-shadow">
                     403 BYPASS
@@ -530,7 +543,7 @@ export default function App() {
                     <Map className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
-                    보행 안내맵
+                    {t("보행 안내맵")}
                   </span>
                 </button>
 
@@ -543,7 +556,7 @@ export default function App() {
                     <Calendar className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
-                    예약 매칭
+                    {t("예약 매칭")}
                   </span>
                 </button>
 
@@ -556,7 +569,7 @@ export default function App() {
                     <Accessibility className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-[10px] font-semibold text-slate-300 text-center tracking-tight truncate w-full filter drop-shadow">
-                    안심 렌즈
+                    {t("안심 렌즈")}
                   </span>
                 </button>
 
@@ -566,7 +579,7 @@ export default function App() {
             {/* Bottom Dock */}
             <div className="mx-4 mb-6 p-3 rounded-[28px] bg-white/10 border border-white/5 backdrop-blur-xl flex items-center justify-around z-10 shadow-lg">
               <button 
-                onClick={() => triggerHomeNotification('비상 가설 통행 전산 상담국 연결 준비 완료 상태입니다.')} 
+                onClick={() => triggerHomeNotification('비상 전산 상담국 연결 준비 완료 상태입니다.')} 
                 className="focus:outline-none focus:ring-0 active:scale-95 transition-transform"
               >
                 <div className="w-11 h-11 rounded-2xl bg-[#34C759] flex items-center justify-center shadow">
@@ -719,7 +732,7 @@ export default function App() {
                     }`}
                   >
                     <Home className="w-5 h-5 mb-0.5" />
-                    <span>홈</span>
+                    <span>{t("홈")}</span>
                   </button>
 
                   <button
@@ -729,7 +742,7 @@ export default function App() {
                     }`}
                   >
                     <Map className="w-5 h-5 mb-0.5" />
-                    <span>안내맵</span>
+                    <span>{t("안내맵")}</span>
                   </button>
 
                   <button
@@ -739,7 +752,7 @@ export default function App() {
                     }`}
                   >
                     <Calendar className="w-5 h-5 mb-0.5" />
-                    <span>매칭예약</span>
+                    <span>{t("매칭예약")}</span>
                   </button>
 
                   <button
@@ -749,7 +762,7 @@ export default function App() {
                     }`}
                   >
                     <Ticket className="w-5 h-5 mb-0.5" />
-                    <span>나의티켓</span>
+                    <span>{t("나의티켓")}</span>
                   </button>
 
                   <button
@@ -759,7 +772,7 @@ export default function App() {
                     }`}
                   >
                     <User className="w-5 h-5 mb-0.5" />
-                    <span>마이</span>
+                    <span>{t("마이")}</span>
                   </button>
                 </div>
               </nav>
@@ -767,14 +780,14 @@ export default function App() {
 
             {/* Accessibility Floating Button */}
             {currentUser && (
-              <div className="absolute bottom-18 right-4 z-40">
+               <div className="absolute bottom-18 right-4 z-40">
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] rounded-full shadow-lg border border-blue-500/20 active:scale-95 transition-all cursor-pointer relative"
-                  aria-label="접근성 센터 설정"
+                  aria-label={t("접근성 센터 설정")}
                 >
                   <Settings className="w-3.5 h-3.5 animate-spin-slow" />
-                  <span className="font-sans font-bold">접근성센터</span>
+                  <span className="font-sans font-bold">{t("접근성센터")}</span>
                   <span className="absolute -top-1 -right-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
