@@ -46,6 +46,13 @@ function AppContent() {
   // Settings states
   const [fontScale, setFontScale] = useState(1.2);
   const [highContrast, setHighContrast] = useState(false);
+  const [themeMode, setThemeMode] = useState<'system' | 'dark' | 'light'>('system');
+  const [isSystemDark, setIsSystemDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true;
+  });
   const [showVoiceConsole, setShowVoiceConsole] = useState(true);
 
   // Modals Visibility
@@ -195,6 +202,42 @@ function AppContent() {
 
     return () => unsubscribe();
   }, []);
+
+  // Synchronize dynamic dark/light mode according to user selection or system preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const applySelectedTheme = () => {
+      let shouldBeDark = true;
+      if (themeMode === 'system') {
+        shouldBeDark = mediaQuery.matches;
+      } else {
+        shouldBeDark = (themeMode === 'dark');
+      }
+      
+      setIsSystemDark(shouldBeDark);
+      
+      if (shouldBeDark) {
+        document.body.classList.remove('light-mode');
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } else {
+        document.body.classList.add('light-mode');
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applySelectedTheme();
+
+    const handler = () => {
+      if (themeMode === 'system') {
+        applySelectedTheme();
+      }
+    };
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, [themeMode]);
 
   // Update root classes for font scale
   useEffect(() => {
@@ -407,32 +450,75 @@ function AppContent() {
       <div className="absolute w-[500px] h-[500px] rounded-full bg-cyan-900/5 blur-[120px] -bottom-30 -right-30 pointer-events-none" />
 
       {/* Side Content Panel (Visible on Desktop Screen devices) */}
-      <div className="hidden lg:flex flex-col max-w-[340px] mr-10 text-left space-y-6 z-10 select-text">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black tracking-wider uppercase w-fit">
+      <div className="hidden lg:flex flex-col max-w-[340px] mr-10 text-left space-y-5 z-10 select-text">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black tracking-wider uppercase w-fit">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-          <span>Universal Sandbox Simulator</span>
+          <span>UNIVERSAL SANDBOX SIMULATOR</span>
         </div>
         
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1.5">
             403 BYPASS<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">{t("무장벽 모빌리티")}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 text-xl font-extrabold">{t("무장벽 모빌리티")}</span>
           </h1>
-          <p className="mt-2 text-slate-400 text-xs leading-relaxed">
-            {t("모두를 만족시키는 배리어프리 공연 관람 지원 플랫폼입니다. 3D 안내맵, 실시간 혼잡 통계, 동행 매니징, 그리고 AR 자막안경 제어 모듈을 인터랙티브하게 체험해 보세요.")}
+          <p className="text-slate-400 text-xs leading-relaxed">
+            {t("모두가 불편함 없이 공연을 즐길 수 있도록 돕는 배리어프리 공연 관람 서비스입니다.")}
+          </p>
+        </div>
+
+        {/* Major Features list */}
+        <div className="space-y-1.5 border-t border-slate-800/40 pt-4">
+          <h4 className="text-[10.5px] font-black text-slate-355 tracking-wider uppercase text-blue-400">{t("주요 기능")}</h4>
+          <ul className="space-y-1.5 text-[11.5px] text-slate-400">
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("3D 공연장 안내지도")}</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("AR 길 안내")}</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("실시간 혼잡 정보 확인")}</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("동행 지원 기능")}</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("360도 공연장 미리보기")}</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-blue-400/80">•</span>
+              <span>{t("AR 자막안경 기능")}</span>
+            </li>
+          </ul>
+          <p className="text-[11px] text-slate-500 pt-1 font-medium italic">
+            {t("다양한 기능을 직접 체험해 보세요.")}
           </p>
         </div>
         
-        <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl space-y-3">
-          <h4 className="text-[11px] font-black text-slate-300 tracking-wider uppercase">{t("📲 사용법 안내")}</h4>
-          <ul className="space-y-2 text-[11.5px] text-slate-400 leading-normal list-disc pl-4">
-            <li>{t("스마트폰 화면 중앙의")} <span className="text-cyan-400 font-bold">403 BYPASS</span> {t("앱 아이콘을 터치하여 실행시킵니다.")}</li>
-            <li>{t("기기 하단의 메인")} <strong>홈 바(Home Bar)</strong> {t("영역을 터치해 다시 폰 홈 화면으로 언제든 나갈 수 있습니다.")}</li>
-            <li>{t("앱 구동 후 우측의")} <strong className="text-blue-400">{t("접근성센터")}</strong>{t("를 이용해 가변 텍스트 크기 스케일을 조절해 보실 수 있습니다.")}</li>
+        <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl space-y-2.5">
+          <h4 className="text-[11px] font-black text-slate-300 tracking-wider uppercase">{t("사용법 안내")}</h4>
+          <ul className="space-y-2 text-[11px] sm:text-[11.5px] text-slate-400 leading-normal pl-0">
+            <li className="flex items-start gap-1 pb-1.5 border-b border-slate-850/30">
+              <span className="text-blue-400 shrink-0 font-extrabold pr-0.5">①</span>
+              <span>{t("스마트폰 화면 중앙의 403 BYPASS 아이콘을 눌러 체험을 시작합니다.")}</span>
+            </li>
+            <li className="flex items-start gap-1 pb-1.5 border-b border-slate-850/30">
+              <span className="text-blue-400 shrink-0 font-extrabold pr-0.5">②</span>
+              <span>{t("원하는 기능을 선택하여 자유롭게 체험해 보세요.")}</span>
+            </li>
+            <li className="flex items-start gap-1">
+              <span className="text-blue-400 shrink-0 font-extrabold pr-0.5">③</span>
+              <span>{t("오른쪽의 접근성 센터에서 글자 크기와 화면 설정을 조절할 수 있습니다.")}</span>
+            </li>
           </ul>
         </div>
 
-        <div className="flex items-center space-x-1.5 text-zinc-500 text-[10px] font-mono">
+        <div className="flex items-center space-x-1.5 text-zinc-500 text-[10px] font-mono select-none pt-1">
           <span>SECURE APP NODE v3.5.0</span>
           <span>•</span>
           <span>SYSTEM CALM</span>
@@ -443,7 +529,16 @@ function AppContent() {
       <div className="relative w-full max-w-[400px] h-[820px] max-h-[94vh] sm:rounded-[52px] sm:border-[12px] sm:border-slate-900 sm:shadow-[0_24px_55px_-12px_rgba(0,0,0,0.85)] bg-slate-950 flex flex-col overflow-hidden">
         
         {/* Status Bar */}
-        <div className="h-8 px-5 flex items-center justify-between text-[11px] font-sans font-bold z-50 text-slate-300 select-none bg-black/10 relative shrink-0">
+        <div 
+          onClick={() => {
+            if (isAppLaunched) {
+              setIsAppLaunched(false);
+              handleAnnounce("403 BYPASS 앱을 잠시 닫고 멀티태스킹 단말 홈 화면으로 복귀하였습니다.");
+            }
+          }}
+          className={`h-8 px-5 flex items-center justify-between text-[11px] font-sans font-bold z-50 text-slate-300 select-none bg-black/10 relative shrink-0 ${isAppLaunched ? 'cursor-pointer hover:bg-white/5 active:bg-white/10 transition-colors' : ''}`}
+          title={isAppLaunched ? "클릭 시 스마트폰 홈 화면으로 나갑니다" : ""}
+        >
           <span>{phoneTime.replace(/오전 |오후 /, '')}</span>
           {/* Dynamic Island style Notch */}
           <div className="w-24 h-[18px] bg-black rounded-full absolute left-1/2 -to-1.5 -translate-x-1/2 top-1.5 flex items-center justify-center overflow-hidden border border-slate-900/50 z-50">
@@ -799,25 +894,7 @@ function AppContent() {
           </div>
         )}
 
-        {/* 4. Realistic iOS Bottom Home Indicator capsule pill */}
-        <div 
-          onClick={() => {
-            if (isAppLaunched) {
-              setIsAppLaunched(false);
-              handleAnnounce("403 BYPASS 앱을 잠시 닫고 멀티태스킹 단말 홈 화면으로 복귀하였습니다.");
-            }
-          }}
-          className="h-5 shrink-0 bg-slate-950 flex items-center justify-center cursor-pointer select-none border-t border-slate-900 relative group z-50"
-          title="홈 화면으로 나가려면 터치하세요"
-        >
-          <div className="w-32 h-1 bg-white/35 rounded-full group-hover:bg-white/60 active:scale-x-95 transition-all" />
-          {/* Subtle pop tooltip to invite the user */}
-          {isAppLaunched && (
-            <span className="absolute opacity-0 group-hover:opacity-100 bottom-5 bg-slate-900 border border-slate-800 text-[9px] font-bold text-zinc-350 px-2 py-1 rounded-lg pointer-events-none transition-opacity duration-205 z-50">
-              💡 클릭 시 모바일 홈 화면으로 탈출합니다
-            </span>
-          )}
-        </div>
+
 
       </div>
 
@@ -841,6 +918,17 @@ function AppContent() {
           const nextHC = !highContrast;
           setHighContrast(nextHC);
           handleAnnounce(nextHC ? "고대비 흑백 안전 보정 뷰가 시작되었습니다." : "일반 컬러 우주 다크 인터페이스로 복구했습니다.");
+        }}
+        themeMode={themeMode}
+        onThemeModeChange={(mode) => {
+          setThemeMode(mode);
+          if (mode === 'system') {
+            handleAnnounce("화면 모드가 기기 설정에 맞춤으로 자동 전환됩니다.");
+          } else if (mode === 'dark') {
+            handleAnnounce("다크 모드로 화면 테마가 수동 지정되어 고정되었습니다.");
+          } else {
+            handleAnnounce("라이트 모드로 화면 테마가 수동 지정되어 고정되었습니다.");
+          }
         }}
       />
 

@@ -121,3 +121,303 @@ body {
 .scale-140-percent { font-size: 19.5px !important; }
 .scale-160-percent { font-size: 22.5px !important; }
 .scale-180-percent { font-size: 25.5px !important; }
+
+/* ==========================================================
+   💡 DYNAMIC LIGHT-MODE (SYSTEM PREFERENCE) SUPPORT OVERRIDES
+   ========================================================== */
+
+/* Global transitions for buttery smooth mode changes */
+body {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+body.light-mode:not(.high-contrast-mode) {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Side Info Content Panel on Left (Desktop views) */
+body.light-mode:not(.high-contrast-mode) .hidden.lg\:flex {
+  color: #1e293b !important;
+}
+body.light-mode:not(.high-contrast-mode) .hidden.lg\:flex h1 {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .hidden.lg\:flex p {
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/50 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/50 h4 {
+  color: #0d1527 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/50 li {
+  color: #334155 !important;
+}
+
+/* Bezel of simulated smartphone */
+body.light-mode:not(.high-contrast-mode) .sm\:border-slate-900 {
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.12) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+
+/* Lockscreen Wallpaper & Clock */
+body.light-mode:not(.high-contrast-mode) .absolute.inset-0.bg-gradient-to-tr.from-slate-950.via-indigo-950.to-blue-950 {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 50%, #eff6ff 100%) !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-white\/95 {
+  color: #0d1527 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-300 {
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-305 {
+  color: #334155 !important;
+}
+
+/* Lockscreen Weather widget card */
+body.light-mode:not(.high-contrast-mode) .bg-white\/5.border-white\/10 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(0, 229, 255, 0.25) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Task details block inside lockscreen widget */
+body.light-mode:not(.high-contrast-mode) .text-cyan-400.font-bold {
+  color: #0099ab !important;
+}
+
+/* Lockscreen clock and date drop shadow styling */
+body.light-mode:not(.high-contrast-mode) .filter.drop-shadow {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.05)) !important;
+}
+
+/* Status Bar text on light background on lockscreen or apps */
+body.light-mode:not(.high-contrast-mode) .h-8.px-5.flex.items-center.justify-between {
+  color: #1e293b !important;
+}
+
+/* Home Screen App Launcher labels */
+body.light-mode:not(.high-contrast-mode) .text-\[10px\].font-semibold.text-slate-300,
+body.light-mode:not(.high-contrast-mode) .text-\[10px\].font-black.text-white {
+  color: #1e293b !important;
+}
+
+/* iOS Bottom Home Indicator container */
+body.light-mode:not(.high-contrast-mode) .h-5.shrink-0.bg-slate-950 {
+  background-color: #f1f5f9 !important;
+  border-top-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .w-32.h-1.bg-white\/35 {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Core Launched App Layouts & backgrounds */
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0B0F19\] {
+  background-color: #f8fafc !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0a0f1d\] {
+  background-color: #f8fafc !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#05070c\] {
+  background-color: #f1f5f9 !important;
+}
+
+/* In-app text color variables mapping */
+body.light-mode:not(.high-contrast-mode) .text-slate-100 {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-200 {
+  color: #1e293b !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-300 {
+  color: #334155 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-400 {
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-white {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-slate-350 {
+  color: #334155 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-zinc-350 {
+  color: #334155 !important;
+}
+
+/* Form panels, Cards, Lists container blocks */
+body.light-mode:not(.high-contrast-mode) .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/65, 
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/60,
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/50,
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/40 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-slate-800 {
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-\[\#212124\] {
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#121214\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-800\/80 {
+  background-color: #f1f5f9 !important;
+}
+
+/* Modals */
+body.light-mode:not(.high-contrast-mode) .bg-slate-950\/90 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+/* Input Fields overrides */
+body.light-mode:not(.high-contrast-mode) input,
+body.light-mode:not(.high-contrast-mode) select,
+body.light-mode:not(.high-contrast-mode) textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Action button items and bottom docks */
+body.light-mode:not(.high-contrast-mode) .mx-4.mb-6.p-3.rounded-\[28px\].bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06) !important;
+}
+body.light-mode:not(.high-contrast-mode) nav.border-t.border-slate-800.bg-slate-900\/90 {
+  background-color: rgba(255, 255, 255, 0.93) !important;
+  border-top-color: #cbd5e1 !important;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05) !important;
+}
+body.light-mode:not(.high-contrast-mode) .nav-tab-btn.text-slate-400 {
+  color: #475569 !important;
+}
+
+/* Sub-panels and special features */
+body.light-mode:not(.high-contrast-mode) .bg-\[\#121215\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0c0c0e\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#08080a\] {
+  background-color: #f1f5f9 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-\[\#1a1a1f\] {
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-slate-850 {
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-zinc-850 {
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#070709\] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-950\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-[#00E5FF] {
+  color: #0093a4 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-[#00E5FF] {
+  border-color: #00cbd5 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-cyan-950\/20 {
+  background-color: rgba(0, 229, 255, 0.08) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-cyan-900\/40 {
+  background-color: rgba(0, 229, 255, 0.15) !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-[#00FF88] {
+  color: #10b981 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+body.light-mode:not(.high-contrast-mode) .hover\:bg-\[\#1c1c20\]:hover {
+  background-color: #f1f5f9 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-zinc-700\/80 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-zinc-700\/85 {
+  background-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-zinc-650 {
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-zinc-805,
+body.light-mode:not(.high-contrast-mode) .border-zinc-800,
+body.light-mode:not(.high-contrast-mode) .border-slate-700,
+body.light-mode:not(.high-contrast-mode) .border-zinc-700 {
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-zinc-400,
+body.light-mode:not(.high-contrast-mode) .text-zinc-500,
+body.light-mode:not(.high-contrast-mode) .text-slate-500 {
+  color: #57657a !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-[#0B0F19] {
+  background-color: #f8fafc !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-[#010204],
+body.light-mode:not(.high-contrast-mode) .bg-[#060608] {
+  background-color: #f1f5f9 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-[#00E5FF]\/20 {
+  border-color: rgba(0, 147, 164, 0.2) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-[#00E5FF]\/10 {
+  background-color: rgba(0, 147, 164, 0.08) !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-[#00e5ff]\/30 {
+  border-color: rgba(0, 147, 164, 0.3) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-[#00e5ff]\/10 {
+  background-color: rgba(0, 147, 164, 0.08) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-900\/95 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-[#05070c]\/80 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-slate-800\/25 {
+  background-color: rgba(0,0,0,0.03) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-cyan-950\/30 {
+  background-color: rgba(0, 147, 164, 0.07) !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-sky-950\/30 {
+  background-color: rgba(14, 165, 233, 0.07) !important;
+}

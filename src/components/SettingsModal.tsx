@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Settings, Languages } from 'lucide-react';
+import { X, Settings, Languages, Sun } from 'lucide-react';
 import { useTranslation, Language } from '../lib/translations';
 
 interface SettingsModalProps {
@@ -10,6 +10,8 @@ interface SettingsModalProps {
   onFontScaleChange: (scale: number) => void;
   highContrast: boolean;
   onHighContrastToggle: () => void;
+  themeMode: 'system' | 'dark' | 'light';
+  onThemeModeChange: (mode: 'system' | 'dark' | 'light') => void;
 }
 
 export default function SettingsModal({
@@ -19,6 +21,8 @@ export default function SettingsModal({
   onFontScaleChange,
   highContrast,
   onHighContrastToggle,
+  themeMode,
+  onThemeModeChange,
 }: SettingsModalProps) {
   const { language, setLanguage, t } = useTranslation();
 
@@ -101,6 +105,37 @@ export default function SettingsModal({
                     >
                       <span className="text-base">{loc.flag}</span>
                       <span>{t(loc.label)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2.5 Screen Theme Mode choosing block */}
+            <div className="space-y-2.5 border-t border-slate-800/50 pt-4">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200 hc-text">
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span>🌓 {t("화면 테마 설정")}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['system', 'dark', 'light'] as const).map((mode) => {
+                  const isActive = themeMode === mode;
+                  const labels = {
+                    system: t("기기 설정 자동 맞춤"),
+                    dark: t("다크 모드"),
+                    light: t("라이트 모드"),
+                  };
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => onThemeModeChange(mode)}
+                      className={`px-2 py-2 text-[10px] sm:text-xs font-black rounded-xl transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-slate-950 text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-slate-800/60'
+                      }`}
+                    >
+                      {labels[mode]}
                     </button>
                   );
                 })}

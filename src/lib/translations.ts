@@ -23,6 +23,10 @@ export const TRANSLATIONS: Record<string, Record<Exclude<Language, 'ko'>, string
     zh: "将背景转换为纯黑色 (#000000) 以保护低视力人群的可见度" 
   },
   "앱 언어 변환": { en: "App Language Settings", ja: "アプリの言語設定", zh: "应用语言设置" },
+  "화면 테마 설정": { en: "Screen Appearance", ja: "画面テーマ設定", zh: "屏幕色彩外观" },
+  "기기 설정 자동 맞춤": { en: "System / Auto", ja: "システム設定に同期", zh: "自动随系统主题" },
+  "다크 모드": { en: "Dark Mode", ja: "ダークモード", zh: "深色模式" },
+  "라이트 모드": { en: "Light Mode", ja: "ライトモード", zh: "浅色模式" },
   "한국어": { en: "Korean (한국어)", ja: "韓国語 (한국어)", zh: "韩语 (한국어)" },
   "영어": { en: "English (영어)", ja: "英語 (영어)", zh: "英语 (영어)" },
   "일본어": { en: "Japanese (일본어)", ja: "日本語 (일본어)", zh: "日语 (일본어)" },
@@ -122,6 +126,71 @@ export const TRANSLATIONS: Record<string, Record<Exclude<Language, 'ko'>, string
 
 export const SIDEBAR_TRANSLATIONS: Record<string, Record<Exclude<Language, 'ko'>, string>> = {
   "무장벽 모빌리티": { en: "Barrier-Free Mobility", ja: "バリアフリーモビリティ", zh: "无障碍移动出行" },
+  "모두가 불편함 없이 공연을 즐길 수 있도록 돕는 배리어프리 공연 관람 서비스입니다.": {
+    en: "A barrier-free performance attendance service helping everyone enjoy shows without any discomfort.",
+    ja: "誰も가 不便なく公演を楽しめるようサポートする、바리아프리 공연 관람 서비스입니다.",
+    zh: "在无人阻碍下帮助所有观演者舒适享受演出的无障碍观演辅助服务。"
+  },
+  "주요 기능": {
+    en: "Key Features",
+    ja: "主要機能",
+    zh: "主要功能"
+  },
+  "3D 공연장 안내지도": {
+    en: "3D Venue Schematic Guide",
+    ja: "3D公演場案内マップ",
+    zh: "3D馆场向导地图"
+  },
+  "AR 길 안내": {
+    en: "AR Routing Directory",
+    ja: "ARルート案内",
+    zh: "AR实景转弯导航"
+  },
+  "실시간 혼잡 정보 확인": {
+    en: "Live Crowd Congestion Info",
+    ja: "リアルタイム混雑情報の確認",
+    zh: "实时人流拥挤度查询"
+  },
+  "동행 지원 기능": {
+    en: "Companion Support Matching",
+    ja: "同行・付き添い支援機能",
+    zh: "同伴出行陪同功能"
+  },
+  "360도 공연장 미리보기": {
+    en: "360° Inside-Venue Preview",
+    ja: "360度公演場プレビュー",
+    zh: "360度场馆全景预览"
+  },
+  "AR 자막안경 기능": {
+    en: "AR Smart Subtitle Glasses",
+    ja: "AR字幕メガネ機能",
+    zh: "AR智能字幕眼镜功能"
+  },
+  "다양한 기능을 직접 체험해 보세요.": {
+    en: "Please feel free to experience various features in person.",
+    ja: "多彩な機能を直接体験してみてください。",
+    zh: "尽情亲自体验多重无障碍功能。"
+  },
+  "사용법 안내": {
+    en: "How to Experience",
+    ja: "使用案内",
+    zh: "使用指南"
+  },
+  "스마트폰 화면 중앙의 403 BYPASS 아이콘을 눌러 체험을 시작합니다.": {
+    en: "Press the 403 BYPASS icon in the center of the mobile screen to begin.",
+    ja: "スマートフォン画面中央の 403 BYPASS アイコンを押して体験を開始します。",
+    zh: "点击智能手机屏幕中央的 403 BYPASS 图标以开始体验。"
+  },
+  "원하는 기능을 선택하여 자유롭게 체험해 보세요.": {
+    en: "Select any feature you want and experience it freely.",
+    ja: "お好みの機能を選択して、自由に体験してみてください。",
+    zh: "自主选择所需的功能并开始自由体验。"
+  },
+  "오른쪽의 접근성 센터에서 글자 크기와 화면 설정을 조절할 수 있습니다.": {
+    en: "Adjust font scales and appearance properties via the Accessibility Center on the right.",
+    ja: "右側のアクセシビリティセンターで、文字サイズや画面テーマ設定を調整できます。",
+    zh: "您可通过右侧的无障碍中心来调节字体尺寸和屏幕色彩外观。"
+  },
   "모두를 만족시키는 배리어프리 공연 관람 지원 플랫폼입니다. 3D 안내맵, 실시간 혼잡 통계, 동행 매니징, 그리고 AR 자막안경 제어 모듈을 인터랙티브하게 체험해 보세요.": {
     en: "A barrier-free show attendance support system designed for everyone. Interactively experience 3D routing floor guides, live overcrowding statistics, secure manager escorts, and customized subtitle glasses controls.",
     ja: "すべての人にご満足いただけるバリアフリー公演観覧支援プラットフォームです。3D案内マップ、リアルタイム混雑統計、同行管理、그리고 AR字幕メガネ制御モジュール을 インタラクティブに体験してください。",
