@@ -12,7 +12,7 @@ export default function AlertModal({ isOpen, message, onClose }: AlertModalProps
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-955/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -24,10 +24,10 @@ export default function AlertModal({ isOpen, message, onClose }: AlertModalProps
                 <Bell className="w-5 h-5" />
               </div>
               <div className="space-y-0.5">
-                <h4 className="text-[10px] font-black text-slate-405 uppercase tracking-widest">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   403 BYPASS 안내
                 </h4>
-                <span className="text-[8px] bg-cyan-500/10 text-cyan-455 border border-cyan-500/25 px-1.5 py-0.5 rounded font-bold uppercase">
+                <span className="text-[8px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 px-1.5 py-0.5 rounded font-bold uppercase">
                   시스템 알림
                 </span>
               </div>

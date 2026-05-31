@@ -291,6 +291,10 @@ export default function ShowDetailView({
               alt={show.title} 
               className="w-24 h-32 object-cover rounded-2xl border border-slate-800 shadow-2xl filter brightness-95"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><rect width="100%" height="120%" fill="%23131d35"/><text x="50%" y="45%" font-family="sans-serif" font-size="10" fill="%2300E5FF" font-weight="bold" text-anchor="middle" dominant-baseline="middle">THEATER</text><text x="50%" y="65%" font-family="sans-serif" font-size="8" fill="%2364748b" text-anchor="middle" dominant-baseline="middle">POSTER</text></svg>`;
+              }}
             />
             <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow border border-slate-900">
               {show.score}% 매칭

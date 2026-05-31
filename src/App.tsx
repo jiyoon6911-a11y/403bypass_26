@@ -24,6 +24,7 @@ import VisibilityTab from './components/VisibilityTab';
 import TicketsTab from './components/TicketsTab';
 import ProfileTab from './components/ProfileTab';
 import ShowDetailView from './components/ShowDetailView';
+import SupportersView from './components/SupportersView';
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ function AppContent() {
   // Layout states
   const [activeTab, setActiveTab] = useState<'home' | 'mobility' | 'visibility' | 'tickets' | 'profile'>('home');
   const [selectedShowDetail, setSelectedShowDetail] = useState<Show | null>(null);
+  const [viewSupportersCampaign, setViewSupportersCampaign] = useState(false);
   const [activeVoiceText, setActiveVoiceText] = useState('403 BYPASS 유니버설 안내 및 탐색 센터에 오신 것을 환영합니다.');
 
   // Settings states
@@ -271,6 +273,7 @@ function AppContent() {
   const handleTabChange = (tabId: typeof activeTab) => {
     setActiveTab(tabId);
     setSelectedShowDetail(null);
+    setViewSupportersCampaign(false);
     let bannerMsg = '';
     if (tabId === 'home') bannerMsg = '홈 화면. 선호 장르별 보편적 맞춤 추천 공연과 서포터즈 정보를 전달합니다.';
     else if (tabId === 'mobility') bannerMsg = '안내맵 화면. 실시간 층별 혼잡도 상황과 스마트 수어 카메라, S-MAP 3D 공간 도면을 탐색합니다.';
@@ -753,6 +756,12 @@ function AppContent() {
                       highContrast={highContrast}
                       onAnnounce={handleAnnounce}
                     />
+                  ) : viewSupportersCampaign ? (
+                    <SupportersView
+                      onBack={() => setViewSupportersCampaign(false)}
+                      onAnnounce={handleAnnounce}
+                      highContrast={highContrast}
+                    />
                   ) : (
                     <>
                       {activeTab === 'home' && (
@@ -764,6 +773,10 @@ function AppContent() {
                           }}
                           onAnnounce={handleAnnounce}
                           highContrast={highContrast}
+                          onSupportersSelect={() => {
+                            setViewSupportersCampaign(true);
+                            handleAnnounce("403 서포터즈 1기 공식 모집 및 혜택 상세 안내문과 지원서 연동 캠페인을 시작합니다.");
+                          }}
                         />
                       )}
 

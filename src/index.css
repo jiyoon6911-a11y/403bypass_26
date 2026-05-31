@@ -1,6 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100;300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 @import "tailwindcss";
 
+:root {
+  --dynamic-slate-50: #f8fafc;
+  --dynamic-slate-100: #f1f5f9;
+  --dynamic-slate-200: #e2e8f0;
+  --dynamic-slate-300: #cbd5e1;
+  --dynamic-slate-400: #94a3b8;
+  --dynamic-slate-550: #64748b;
+  --dynamic-slate-800: #1a1a1d;
+  --dynamic-slate-850: #222226;
+  --dynamic-slate-900: #121214;
+  --dynamic-slate-950: #060608;
+  --dynamic-neon-blue: #00E5FF;
+  --dynamic-electric-cyan: #00F0FF;
+}
+
 @theme {
   --font-sans: 'Noto Sans KR', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Space Grotesk', sans-serif;
@@ -20,26 +35,26 @@
   --color-blue-950: #002229;
 
   /* Overwrite slate to match the mockup's deep, pristine charcoal dark grays */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-550: #64748b;
-  --color-slate-800: #1a1a1d;
-  --color-slate-850: #222226;
-  --color-slate-900: #121214;
-  --color-slate-950: #060608;
+  --color-slate-50: var(--dynamic-slate-50);
+  --color-slate-100: var(--dynamic-slate-100);
+  --color-slate-200: var(--dynamic-slate-200);
+  --color-slate-300: var(--dynamic-slate-300);
+  --color-slate-400: var(--dynamic-slate-400);
+  --color-slate-550: var(--dynamic-slate-550);
+  --color-slate-800: var(--dynamic-slate-800);
+  --color-slate-850: var(--dynamic-slate-850);
+  --color-slate-900: var(--dynamic-slate-900);
+  --color-slate-950: var(--dynamic-slate-950);
 
-  --color-neon-blue: #00E5FF;
-  --color-electric-cyan: #00F0FF;
+  --color-neon-blue: var(--dynamic-neon-blue);
+  --color-electric-cyan: var(--dynamic-electric-cyan);
   --color-warning-yellow: #EAB308;
   --color-hazard-red: #EF4444;
   --color-safe-green: #10B981;
   --color-soft-gray: #6B7280;
-  --color-deep-slate: #121214;
+  --color-deep-slate: var(--dynamic-slate-900);
   --color-pitch-black: #000000;
-  --color-dark-bg: #000000;
+  --color-dark-bg: var(--dynamic-slate-950);
 }
 
 body {
@@ -66,6 +81,20 @@ body {
 .high-contrast-mode {
   background-color: #000000 !important;
   color: #FFFFFF !important;
+
+  --dynamic-slate-50: #ffffff;
+  --dynamic-slate-100: #ffffff;
+  --dynamic-slate-200: #ffffff;
+  --dynamic-slate-300: #ffffff;
+  --dynamic-slate-400: #ffffff;
+  --dynamic-slate-550: #ffffff;
+  --dynamic-slate-800: #ffffff;
+  --dynamic-slate-850: #000000;
+  --dynamic-slate-900: #000000;
+  --dynamic-slate-950: #000000;
+
+  --dynamic-neon-blue: #00ffff;
+  --dynamic-electric-cyan: #00ffff;
 }
 
 .high-contrast-mode .hc-card {
@@ -134,6 +163,20 @@ body {
 body.light-mode:not(.high-contrast-mode) {
   background-color: #f1f5f9;
   color: #0f172a;
+
+  --dynamic-slate-50: #020617;
+  --dynamic-slate-100: #0f172a;
+  --dynamic-slate-200: #1e293b;
+  --dynamic-slate-300: #334155;
+  --dynamic-slate-400: #475569;
+  --dynamic-slate-550: #64748b;
+  --dynamic-slate-800: #cbd5e1;
+  --dynamic-slate-850: #e2e8f0;
+  --dynamic-slate-900: #ffffff;
+  --dynamic-slate-950: #f1f5f9;
+
+  --dynamic-neon-blue: #007c8d;
+  --dynamic-electric-cyan: #006b7a;
 }
 
 /* Side Info Content Panel on Left (Desktop views) */
@@ -163,6 +206,11 @@ body.light-mode:not(.high-contrast-mode) .sm\:border-slate-900 {
   border-color: #e2e8f0 !important;
   box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.12) !important;
 }
+
+/* Base wildcard selector for bg-slate-950 layouts to white backgrounds */
+body.light-mode:not(.high-contrast-mode) [class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+}
 body.light-mode:not(.high-contrast-mode) .bg-slate-950 {
   background-color: #ffffff !important;
 }
@@ -174,11 +222,83 @@ body.light-mode:not(.high-contrast-mode) .absolute.inset-0.bg-gradient-to-tr.fro
 body.light-mode:not(.high-contrast-mode) .text-white\/95 {
   color: #0d1527 !important;
 }
-body.light-mode:not(.high-contrast-mode) .text-slate-300 {
-  color: #475569 !important;
+
+/* Direct, extremely safe light-mode class-based text color overrides */
+body.light-mode:not(.high-contrast-mode) .text-slate-50 { color: #020617 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-100 { color: #0f172a !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-200 { color: #1e293b !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-250 { color: #334155 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-300 { color: #334155 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-305 { color: #334155 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-350 { color: #475569 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-400 { color: #475569 !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-450 { color: #64748b !important; }
+body.light-mode:not(.high-contrast-mode) .text-slate-500 { color: #64748b !important; }
+
+body.light-mode:not(.high-contrast-mode) .text-zinc-100 { color: #0f172a !important; }
+body.light-mode:not(.high-contrast-mode) .text-zinc-200 { color: #1e293b !important; }
+body.light-mode:not(.high-contrast-mode) .text-zinc-300 { color: #334155 !important; }
+body.light-mode:not(.high-contrast-mode) .text-zinc-400 { color: #475569 !important; }
+body.light-mode:not(.high-contrast-mode) .text-zinc-500 { color: #64748b !important; }
+
+/* Dynamic text modifications - safely letting CSS variables handle transitions naturally,
+   only enforcing white text on elements with solid deep-colored background wrappers. */
+body.light-mode:not(.high-contrast-mode) .bg-gradient-to-r,
+body.light-mode:not(.high-contrast-mode) .bg-gradient-to-r *,
+body.light-mode:not(.high-contrast-mode) .bg-gradient-to-tr,
+body.light-mode:not(.high-contrast-mode) .bg-gradient-to-tr *,
+body.light-mode:not(.high-contrast-mode) button.bg-blue-600,
+body.light-mode:not(.high-contrast-mode) button.bg-blue-600 *,
+body.light-mode:not(.high-contrast-mode) button.bg-blue-700,
+body.light-mode:not(.high-contrast-mode) button.bg-blue-700 *,
+body.light-mode:not(.high-contrast-mode) .bg-blue-600 * {
+  color: #ffffff !important;
 }
-body.light-mode:not(.high-contrast-mode) .text-slate-305 {
-  color: #334155 !important;
+
+body.light-mode:not(.high-contrast-mode) .bg-slate-800,
+body.light-mode:not(.high-contrast-mode) [class*="bg-slate-800"] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .border-slate-700,
+body.light-mode:not(.high-contrast-mode) [class*="border-slate-700"] {
+  border-color: #cbd5e1 !important;
+}
+
+body.light-mode:not(.high-contrast-mode) .text-white {
+  color: #0f172a !important;
+}
+
+body.light-mode:not(.high-contrast-mode) button .text-white,
+body.light-mode:not(.high-contrast-mode) button.text-white,
+body.light-mode:not(.high-contrast-mode) .btn .text-white,
+body.light-mode:not(.high-contrast-mode) .btn.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-500 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-500.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-600 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-600.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-700 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-700.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-800 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-blue-800.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-500 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-500.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-600 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-600.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-700 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-cyan-700.text-white,
+body.light-mode:not(.high-contrast-mode) .bg-[#1e61f6] .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-[#1e61f6].text-white,
+body.light-mode:not(.high-contrast-mode) [class*="bg-gradient-"] .text-white,
+body.light-mode:not(.high-contrast-mode) [class*="bg-gradient-"].text-white,
+body.light-mode:not(.high-contrast-mode) .bg-emerald-600 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-indigo-600 .text-white,
+body.light-mode:not(.high-contrast-mode) .bg-indigo-600.text-white,
+body.light-mode:not(.high-contrast-mode) .absolute.inset-0.bg-gradient-to-tr *,
+body.light-mode:not(.high-contrast-mode) .bg-[#131d35] *,
+body.light-mode:not(.high-contrast-mode) .bg-[#0c1221] *,
+body.light-mode:not(.high-contrast-mode) .w-16.h-16 * {
+  color: #ffffff !important;
 }
 
 /* Lockscreen Weather widget card */
@@ -188,9 +308,11 @@ body.light-mode:not(.high-contrast-mode) .bg-white\/5.border-white\/10 {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04) !important;
 }
 
-/* Task details block inside lockscreen widget */
-body.light-mode:not(.high-contrast-mode) .text-cyan-400.font-bold {
-  color: #0099ab !important;
+/* Task details block inside lockscreen widget & general cyan text objects */
+body.light-mode:not(.high-contrast-mode) .text-cyan-400,
+body.light-mode:not(.high-contrast-mode) .text-cyan-500,
+body.light-mode:not(.high-contrast-mode) [class*="text-cyan-"] {
+  color: #007a8a !important;
 }
 
 /* Lockscreen clock and date drop shadow styling */
@@ -229,35 +351,21 @@ body.light-mode:not(.high-contrast-mode) .bg-\[\#05070c\] {
   background-color: #f1f5f9 !important;
 }
 
-/* In-app text color variables mapping */
-body.light-mode:not(.high-contrast-mode) .text-slate-100 {
-  color: #0f172a !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-slate-200 {
-  color: #1e293b !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-slate-300 {
-  color: #334155 !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-slate-400 {
-  color: #475569 !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-white {
-  color: #0f172a !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-slate-350 {
-  color: #334155 !important;
-}
-body.light-mode:not(.high-contrast-mode) .text-zinc-350 {
-  color: #334155 !important;
-}
-
 /* Form panels, Cards, Lists container blocks */
 body.light-mode:not(.high-contrast-mode) .bg-slate-900 {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
 }
+body.light-mode:not(.high-contrast-mode) [class*="bg-slate-900"],
+body.light-mode:not(.high-contrast-mode) [class*="bg-[#121214]"],
+body.light-mode:not(.high-contrast-mode) [class*="bg-[#121215]"],
+body.light-mode:not(.high-contrast-mode) [class*="bg-[#0b0c10]"],
+body.light-mode:not(.high-contrast-mode) [class*="bg-[#0b0c10]/"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
 body.light-mode:not(.high-contrast-mode) .bg-slate-900\/65, 
 body.light-mode:not(.high-contrast-mode) .bg-slate-900\/60,
 body.light-mode:not(.high-contrast-mode) .bg-slate-900\/50,
@@ -265,10 +373,13 @@ body.light-mode:not(.high-contrast-mode) .bg-slate-900\/40 {
   background-color: rgba(255, 255, 255, 0.95) !important;
   border-color: #e2e8f0 !important;
 }
-body.light-mode:not(.high-contrast-mode) .border-slate-800 {
+body.light-mode:not(.high-contrast-mode) .border-slate-800,
+body.light-mode:not(.high-contrast-mode) [class*="border-slate-800"],
+body.light-mode:not(.high-contrast-mode) [class*="border-slate-850"] {
   border-color: #cbd5e1 !important;
 }
-body.light-mode:not(.high-contrast-mode) .border-\[\#212124\] {
+body.light-mode:not(.high-contrast-mode) .border-\[\#212124\],
+body.light-mode:not(.high-contrast-mode) [class*="border-[#212124]"] {
   border-color: #e2e8f0 !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-\[\#121214\] {
@@ -279,6 +390,19 @@ body.light-mode:not(.high-contrast-mode) .bg-\[\#121214\] {
 body.light-mode:not(.high-contrast-mode) .bg-slate-800\/80 {
   background-color: #f1f5f9 !important;
 }
+
+/* Specific custom backgrounds to white/light-gray overrides */
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0B0F19\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0B0F19]"] { background-color: #f8fafc !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0a0f1d\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0a0f1d]"] { background-color: #f8fafc !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0a0a0d\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0a0a0d]"] { background-color: #ffffff !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0e0e11\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0e0e11]"] { background-color: #ffffff !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#05070c\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#05070c]"] { background-color: #f1f5f9 !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0c0c0e\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0c0c0e]"] { background-color: #f8fafc !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#060608\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#060608]"] { background-color: #f1f5f9 !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0b0c10\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0b0c10]"] { background-color: #f8fafc !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0d0d10\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#0d0d10]"] { background-color: #ffffff !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#131315\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#131315]"] { background-color: #ffffff !important; }
+body.light-mode:not(.high-contrast-mode) .bg-\[\#121215\], body.light-mode:not(.high-contrast-mode) [class*="bg-[#121215]"] { background-color: #ffffff !important; }
 
 /* Modals */
 body.light-mode:not(.high-contrast-mode) .bg-slate-950\/90 {
@@ -337,32 +461,49 @@ body.light-mode:not(.high-contrast-mode) .bg-\[\#070709\] {
 body.light-mode:not(.high-contrast-mode) .bg-white\/5 {
   background-color: rgba(0, 0, 0, 0.05) !important;
 }
-body.light-mode:not(.high-contrast-mode) .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.1) !important;
+
+/* Translucent layer overrides */
+body.light-mode:not(.high-contrast-mode) .border-white\/5,
+body.light-mode:not(.high-contrast-mode) .border-white\/10,
+body.light-mode:not(.high-contrast-mode) .border-white\/20,
+body.light-mode:not(.high-contrast-mode) .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
 }
+body.light-mode:not(.high-contrast-mode) .bg-white\/5,
+body.light-mode:not(.high-contrast-mode) .bg-white\/10,
+body.light-mode:not(.high-contrast-mode) .bg-white\/15,
+body.light-mode:not(.high-contrast-mode) .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
 body.light-mode:not(.high-contrast-mode) .bg-slate-950\/95 {
   background-color: rgba(255, 255, 255, 0.95) !important;
   border-color: #e2e8f0 !important;
 }
+
+/* Primary Cyan text & border adjustments for high contrast legibility on light sheets */
 body.light-mode:not(.high-contrast-mode) .text-[#00E5FF] {
-  color: #0093a4 !important;
+  color: #007a8a !important;
 }
 body.light-mode:not(.high-contrast-mode) .border-[#00E5FF] {
   border-color: #00cbd5 !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-cyan-950\/20 {
-  background-color: rgba(0, 229, 255, 0.08) !important;
+  background-color: rgba(0, 229, 255, 0.04) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-cyan-900\/40 {
-  background-color: rgba(0, 229, 255, 0.15) !important;
+  background-color: rgba(0, 229, 255, 0.07) !important;
 }
 body.light-mode:not(.high-contrast-mode) .text-[#00FF88] {
-  color: #10b981 !important;
+  color: #059669 !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-emerald-500\/10 {
   background-color: rgba(16, 185, 129, 0.08) !important;
 }
-body.light-mode:not(.high-contrast-mode) .hover\:bg-\[\#1c1c20\]:hover {
+body.light-mode:not(.high-contrast-mode) .hover\:bg-\[\#1c1c20\]:hover,
+body.light-mode:not(.high-contrast-mode) .hover\:bg-\[\#1a1a1d\]:hover,
+body.light-mode:not(.high-contrast-mode) .hover\:bg-slate-800:hover,
+body.light-mode:not(.high-contrast-mode) .hover\:bg-slate-900:hover {
   background-color: #f1f5f9 !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-zinc-700\/80 {
@@ -394,16 +535,16 @@ body.light-mode:not(.high-contrast-mode) .bg-[#060608] {
   background-color: #f1f5f9 !important;
 }
 body.light-mode:not(.high-contrast-mode) .border-[#00E5FF]\/20 {
-  border-color: rgba(0, 147, 164, 0.2) !important;
+  border-color: rgba(0, 122, 138, 0.2) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-[#00E5FF]\/10 {
-  background-color: rgba(0, 147, 164, 0.08) !important;
+  background-color: rgba(0, 122, 138, 0.08) !important;
 }
 body.light-mode:not(.high-contrast-mode) .border-[#00e5ff]\/30 {
-  border-color: rgba(0, 147, 164, 0.3) !important;
+  border-color: rgba(0, 122, 138, 0.3) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-[#00e5ff]\/10 {
-  background-color: rgba(0, 147, 164, 0.08) !important;
+  background-color: rgba(0, 122, 138, 0.08) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-slate-900\/95 {
   background-color: #ffffff !important;
@@ -416,8 +557,316 @@ body.light-mode:not(.high-contrast-mode) .bg-slate-800\/25 {
   background-color: rgba(0,0,0,0.03) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-cyan-950\/30 {
-  background-color: rgba(0, 147, 164, 0.07) !important;
+  background-color: rgba(0, 122, 138, 0.07) !important;
 }
 body.light-mode:not(.high-contrast-mode) .bg-sky-950\/30 {
   background-color: rgba(14, 165, 233, 0.07) !important;
 }
+
+/* Wildcard matches for custom colors used in Mobility tab to light sheets */
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0b0c10\] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0a0a0d\] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0e0e11\]\/95,
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0e0e11\] {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .bg-\[\#0d0d10\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Deep water blue/cyan text on light screen mode */
+body.light-mode:not(.high-contrast-mode) [class*="text-blue-400"] {
+  color: #007a8a !important;
+}
+body.light-mode:not(.high-contrast-mode) [class*="text-blue-500"] {
+  color: #0284c7 !important;
+}
+
+/* Mobility Tab Floor Congestion list items */
+body.light-mode:not(.high-contrast-mode) .congestion-card {
+  background-image: none !important;
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card[class*="border-green"] {
+  background-color: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card[class*="border-amber"] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card[class*="border-red"] {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card * {
+  color: #334155 !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card .text-white {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card .text-slate-400,
+body.light-mode:not(.high-contrast-mode) .congestion-card .text-slate-500 {
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card [class*="text-green"] {
+  color: #15803d !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card [class*="text-amber"] {
+  color: #b45309 !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card [class*="text-rose"],
+body.light-mode:not(.high-contrast-mode) .congestion-card [class*="text-red"] {
+  color: #b91c1c !important;
+}
+body.light-mode:not(.high-contrast-mode) .congestion-card .bg-slate-950 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Overrides for generic cards in Light Mode */
+body.light-mode:not(.high-contrast-mode) .hc-card {
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-card * {
+  color: #334155 !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-card .text-white {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-card .text-slate-100,
+body.light-mode:not(.high-contrast-mode) .hc-card .text-slate-200,
+body.light-mode:not(.high-contrast-mode) .hc-card .text-slate-300 {
+  color: #1e293b !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-card .text-slate-400,
+body.light-mode:not(.high-contrast-mode) .hc-card .text-slate-500 {
+  color: #475569 !important;
+}
+
+/* Visibility Tab real-time status management section */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .text-white {
+  color: #0d1527 !important;
+}
+
+/* Grid layout with selector tabs inside status container */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 button {
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 button:hover {
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 button.text-[#00E5FF] {
+  background-color: #ffffff !important;
+  color: #007a8a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 button span[class*="bg-slate-900"] {
+  background-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container .grid.grid-cols-3 button span[class*="bg-[#00E5FF]"] {
+  background-color: rgba(0, 122, 138, 0.12) !important;
+  color: #007a8a !important;
+}
+
+/* Filter container & buttons inside status container */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container [class*="bg-slate-950/50"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button[class*="bg-slate-900"] {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button[class*="bg-slate-900"]:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button[class*="bg-slate-900"] span[class*="bg-slate-950"] {
+  background-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+/* General high contrast tags */
+body.light-mode:not(.high-contrast-mode) .text-emerald-400,
+body.light-mode:not(.high-contrast-mode) [class*="text-emerald"] {
+  color: #047857 !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-cyan-400,
+body.light-mode:not(.high-contrast-mode) [class*="text-cyan"] {
+  color: #007a8a !important;
+}
+body.light-mode:not(.high-contrast-mode) .text-rose-400,
+body.light-mode:not(.high-contrast-mode) [class*="text-rose"],
+body.light-mode:not(.high-contrast-mode) .text-red-400 {
+  color: #b91c1c !important;
+}
+
+/* Escort guidelines subtext inside reservation card */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container [class*="bg-slate-950/90"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container [class*="bg-slate-950/90"] span {
+  color: #475569 !important;
+}
+
+/* Secondary Button designs for beautiful matching */
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary[class*="text-blue"],
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary [class*="text-blue"] {
+  color: #0284c7 !important;
+}
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary[class*="text-cyan"],
+body.light-mode:not(.high-contrast-mode) .hc-button-secondary [class*="text-cyan"] {
+  color: #007a8a !important;
+}
+
+/* Ticket Header Flat Colors */
+.ticket-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Default Dark Mode Flat Colors */
+.ticket-bypass {
+  background-color: #0369a1 !important; /* Solid sky-blue */
+}
+.ticket-interpark {
+  background-color: #b91c1c !important; /* Solid crimson */
+}
+.ticket-yes24 {
+  background-color: #1d4ed8 !important; /* Solid navy-blue */
+}
+.ticket-melon {
+  background-color: #047857 !important; /* Solid slate-green */
+}
+
+/* Light Mode Flat Colors (Pleasant pastels, beautifully readable text) */
+body.light-mode:not(.high-contrast-mode) .ticket-bypass {
+  background-color: #e0f2fe !important; /* Light sky blue */
+  border-bottom: 2px solid #bae6fd !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-interpark {
+  background-color: #ffe4e6 !important; /* Light rose */
+  border-bottom: 2px solid #fecdd3 !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-yes24 {
+  background-color: #dbeafe !important; /* Light blue */
+  border-bottom: 2px solid #bfdbfe !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-melon {
+  background-color: #d1fae5 !important; /* Light emerald */
+  border-bottom: 2px solid #a7f3d0 !important;
+}
+
+/* Ensure child text contrast inside light-mode ticket headers */
+body.light-mode:not(.high-contrast-mode) .ticket-header,
+body.light-mode:not(.high-contrast-mode) .ticket-header * {
+  color: #0f172a !important; /* Dark text for perfect readability on light solid backgrounds */
+}
+body.light-mode:not(.high-contrast-mode) .ticket-bypass h3,
+body.light-mode:not(.high-contrast-mode) .ticket-bypass p {
+  color: #0369a1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-interpark h3,
+body.light-mode:not(.high-contrast-mode) .ticket-interpark p {
+  color: #be123c !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-yes24 h3,
+body.light-mode:not(.high-contrast-mode) .ticket-yes24 p {
+  color: #1d4ed8 !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-melon h3,
+body.light-mode:not(.high-contrast-mode) .ticket-melon p {
+  color: #047857 !important;
+}
+
+/* Badge colors for light mode inside ticket headers */
+body.light-mode:not(.high-contrast-mode) .ticket-header span.rounded {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+  color: #0d1527 !important;
+}
+body.light-mode:not(.high-contrast-mode) .ticket-header .text-yellow-400 {
+  color: #ca8a04 !important; /* Dark gold instead of bright yellow on light pass */
+}
+
+/* Sub-filters in Realtime Status Container override black backgrounds in Light Mode */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-blue-600 {
+  background-color: #2563eb !important; /* Rich blue in light mode */
+  color: #ffffff !important;
+  border-color: #60a5fa !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-cyan-600 {
+  background-color: #0891b2 !important; /* Rich cyan in light mode */
+  color: #ffffff !important;
+  border-color: #22d3ee !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-850 {
+  background-color: #e2e8f0 !important; /* Active slate color */
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-805,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-900 {
+  background-color: #f1f5f9 !important; /* Inactive slate */
+  color: #475569 !important;
+  border: 1px solid transparent !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-900:hover,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-805:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Badge count styling inside sub-filters */
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button span.rounded-full,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button span[class*="bg-slate-950"] {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+  color: #475569 !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-blue-600 span.rounded-full,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-cyan-600 span.rounded-full,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-blue-600 span[class*="bg-black/20"],
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-cyan-600 span[class*="bg-black/20"] {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-850 span.rounded-full,
+body.light-mode:not(.high-contrast-mode) .realtime-status-container button.bg-slate-850 span[class*="bg-black/20"] {
+  background-color: rgba(15, 23, 42, 0.15) !important;
+  color: #0f172a !important;
+}
+
+

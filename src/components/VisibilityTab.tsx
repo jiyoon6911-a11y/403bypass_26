@@ -231,15 +231,15 @@ export default function VisibilityTab({
                 <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-wide ${dday.labelClass}`}>
                   {dday.dDayText}
                 </span>
-                <span className="text-[11.5px] font-black text-white">{typeLabel}</span>
+                <span className="text-[11.5px] font-black text-slate-100">{typeLabel}</span>
               </div>
               
               <div className="space-y-0.5">
-                <p className="text-xs font-bold text-slate-250">{b.detail}</p>
-                <p className="text-[10px] text-slate-450 font-mono font-bold flex items-center gap-1">
+                <p className="text-xs font-bold text-slate-300">{b.detail}</p>
+                <p className="text-[10px] text-slate-400 font-mono font-bold flex items-center gap-1">
                   <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
                   <span>상세일정:</span>
-                  <strong className="text-white">{b.date} {b.time}</strong>
+                  <strong className="text-slate-200">{b.date} {b.time}</strong>
                 </p>
               </div>
             </div>
@@ -325,7 +325,7 @@ export default function VisibilityTab({
                     </div>
                   </div>
                   <div className="text-left space-y-0.5">
-                    <p className={`text-[10px] font-black ${isSelected ? 'text-white' : 'text-slate-350'}`}>
+                    <p className={`text-[10px] font-black ${isSelected ? 'text-white' : 'text-slate-300'}`}>
                       {item.short}
                     </p>
                     <p className="text-[8px] text-zinc-500 leading-tight">
@@ -399,7 +399,7 @@ export default function VisibilityTab({
                       ? 'text-rose-500'
                       : (day === 2 || day === 9 || day === 16 || day === 23 || day === 30)
                       ? 'text-blue-400'
-                      : 'text-slate-350';
+                      : 'text-slate-300';
 
                     return (
                       <button
@@ -437,7 +437,7 @@ export default function VisibilityTab({
                       className={`p-2 rounded-xl text-left border text-xs font-mono font-bold transition-all ${
                         isSelected
                           ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-350 hover:bg-slate-800'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
                       }`}
                     >
                       {time}
@@ -563,7 +563,7 @@ export default function VisibilityTab({
                         ? 'text-rose-500'
                         : (day === 2 || day === 9 || day === 16 || day === 23 || day === 30)
                         ? 'text-blue-400'
-                        : 'text-slate-350';
+                        : 'text-slate-300';
 
                       return (
                         <button
@@ -606,7 +606,7 @@ export default function VisibilityTab({
                             ? 'bg-slate-920 border-slate-900 text-slate-500 line-through cursor-not-allowed'
                             : isSelected
                             ? 'bg-blue-600 border-blue-500 text-white font-black'
-                            : 'bg-slate-900 border-slate-800 text-slate-350 hover:bg-slate-800'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
                         }`}
                       >
                         {time}
@@ -649,7 +649,7 @@ export default function VisibilityTab({
       {/* 4. CATEGORIZED RESERVATIONS WITH TABS & D-DAY IDENTIFIERS */}
       <div className="pt-6 border-t border-slate-800 mt-6"></div>
 
-      <div className="hc-card rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/15 p-5 space-y-4 text-left shadow-xl shadow-slate-950/40">
+      <div className="hc-card realtime-status-container rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/15 p-5 space-y-4 text-left shadow-xl shadow-slate-950/40">
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-850">
           <div className="space-y-0.5">
@@ -749,9 +749,9 @@ export default function VisibilityTab({
         {/* Detailed Ticket / Reservation cards under currently expanded tab split by depth category */}
         <div className="space-y-5 pt-1">
           {activeTabItems.length === 0 ? (
-            <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl bg-slate-950/40 space-y-2.5">
+            <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-2xl bg-slate-950/40 space-y-2.5">
               <CalendarPlus className="w-9 h-9 text-slate-700 mx-auto" />
-              <p className="text-xs text-slate-450 font-black hc-text">
+              <p className="text-xs text-slate-400 font-black hc-text">
                 이 구역에 등록된 매칭/임대 예약 건이 비어 있습니다.
               </p>
               
@@ -823,12 +823,6 @@ export default function VisibilityTab({
               );
             })()
           )}
-        </div>
-
-        <div className="p-3 bg-[#0b0c10] rounded-xl border border-slate-850 text-left">
-          <p className="text-[10px] text-zinc-400 font-sans font-semibold leading-normal">
-            ⚙️ <strong className="text-yellow-500">D-Day 분류 보완 기준:</strong> 본 플랫폼은 대학로의 안심 실황 보강을 위한 수시 센서 시간대인 <strong className="text-white">2026년 5월 23일 (오늘자)</strong>을 기준으로 계산되어 정확하게 스택 배정됩니다.
-          </p>
         </div>
       </div>
 

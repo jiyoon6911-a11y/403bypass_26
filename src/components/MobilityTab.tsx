@@ -980,7 +980,7 @@ export default function MobilityTab({ onAnnounce, highContrast }: MobilityTabPro
             <div
               key={item.id}
               onClick={() => handleAreaClick(item.area, item.level, item.density, item.desc)}
-              className={`p-3.5 rounded-2xl border bg-gradient-to-r ${item.color} ${item.borderColor} hover:opacity-90 transition-all cursor-pointer space-y-2`}
+              className={`congestion-card p-3.5 rounded-2xl border bg-gradient-to-r ${item.color} ${item.borderColor} hover:opacity-90 transition-all cursor-pointer space-y-2`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

@@ -49,7 +49,7 @@ export default function TicketsTab({
           <div className="hc-card rounded-2xl bg-gradient-to-tr from-slate-900 to-blue-950/30 border border-blue-500/20 p-4 space-y-2.5 shadow-lg text-left">
             <div className="flex items-start gap-2.5">
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-cyan-400 shrink-0">
-                <Ticket className="w-4 h-4 text-cyan-405" />
+                <Ticket className="w-4 h-4 text-cyan-400" />
               </div>
               <div className="space-y-0.5">
                 <h4 className="text-xs font-black text-slate-100 flex items-center gap-1">
@@ -74,7 +74,7 @@ export default function TicketsTab({
           <div className="space-y-4">
             {/* Core Default Ticket */}
             <div className="hc-card rounded-3xl bg-slate-900 border border-blue-500/30 overflow-hidden shadow-2xl relative text-left">
-              <div className="bg-gradient-to-r from-blue-700 to-cyan-700 p-4 text-white space-y-1">
+              <div className="ticket-header ticket-bypass p-4 text-white space-y-1">
                 <div className="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase opacity-90 font-sans">
                   <span>Bypass Ticket (보편적 무벽 패스)</span>
                   <span className="px-1.5 py-0.5 rounded bg-black/30 font-mono text-[9px] text-yellow-400">발권 완료</span>
@@ -91,11 +91,11 @@ export default function TicketsTab({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-0.5">
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block hc-text-mute">일정 및 관람시간</span>
-                    <p className="text-xs font-extrabold text-white">2026. 06. 15 (월) 19:30</p>
+                    <p className="text-xs font-extrabold text-slate-100">2026. 06. 15 (월) 19:30</p>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block hc-text-mute">지정 확보 좌석</span>
-                    <p className="text-xs font-extrabold text-cyan-405">1층 휠체어 접근 석-D2</p>
+                    <p className="text-xs font-extrabold text-cyan-400 font-mono">1층 휠체어 접근 석-D2</p>
                   </div>
                 </div>
 
@@ -157,13 +157,13 @@ export default function TicketsTab({
                   key={t.id}
                   className="hc-card rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl relative text-left"
                 >
-                  <div className={`bg-gradient-to-r ${themeClass} p-4 text-white space-y-1`}>
+                  <div className={`ticket-header ticket-${t.provider} p-4 text-white space-y-1`}>
                     <div className="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase opacity-90">
                       <span className="flex items-center gap-1">
                         <Link className="w-3.5 h-3.5 text-yellow-400" />
                         {providerLabel}
                       </span>
-                      <span className="px-1.5 py-0.5 rounded bg-black/40 font-mono text-[9px] text-cyan-300">무장벽 모드 결합</span>
+                      <span className="px-1.5 py-0.5 rounded bg-black/40 font-mono text-[9px]" style={{ color: '#00ffff' }}>무장벽 모드 결합</span>
                     </div>
                     <h3 className="text-base font-black tracking-tight leading-snug">{t.title}</h3>
                     <p className="text-[11px] font-medium text-slate-100 uppercase opacity-95">{t.place}</p>
@@ -177,11 +177,11 @@ export default function TicketsTab({
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-0.5">
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block hc-text-mute">관람시간(동기화 완료)</span>
-                        <p className="text-xs font-extrabold text-white">{t.time}</p>
+                        <p className="text-xs font-extrabold text-slate-100">{t.time}</p>
                       </div>
                       <div className="space-y-0.5">
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block hc-text-mute">확보 좌석</span>
-                        <p className="text-xs font-extrabold text-cyan-405">{t.seat}</p>
+                        <p className="text-xs font-extrabold text-cyan-400 font-mono">{t.seat}</p>
                       </div>
                     </div>
 

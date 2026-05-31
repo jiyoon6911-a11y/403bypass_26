@@ -9,14 +9,29 @@ interface HomeTabProps {
   onShowSelect: (show: Show) => void;
   onAnnounce: (msg: string) => void;
   highContrast: boolean;
+  onSupportersSelect: () => void;
 }
 
-export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highContrast }: HomeTabProps) {
+export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highContrast, onSupportersSelect }: HomeTabProps) {
   const { t } = useTranslation();
   const [selectedGenre, setSelectedGenre] = useState('전체');
-  const [isSupporterRegistered, setIsSupporterRegistered] = useState(false);
+  const [isSupporterRegistered, setIsSupporterRegistered] = useState(() => {
+    return localStorage.getItem('bypass_supporter_applied') === 'true';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
+
+  // Sync supporter applied status on mount
+  React.useEffect(() => {
+    const checkApplied = () => {
+      setIsSupporterRegistered(localStorage.getItem('bypass_supporter_applied') === 'true');
+    };
+    checkApplied();
+    window.addEventListener('storage', checkApplied);
+    return () => {
+      window.removeEventListener('storage', checkApplied);
+    };
+  }, []);
 
   const genres = ['전체', '뮤지컬', '연극', '콘서트'];
 
@@ -210,6 +225,10 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                       alt={show.title}
                       className="w-14 h-14 object-cover filter brightness-95 shrink-0"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23131d35"/><text x="50%" y="54%" font-family="sans-serif" font-size="9" fill="%2300E5FF" font-weight="bold" text-anchor="middle" dominant-baseline="middle">THEATER</text></svg>`;
+                      }}
                     />
                     <div className="p-2.5 flex-1 flex flex-col justify-between">
                       <div className="space-y-0.5 flex flex-col">
@@ -290,6 +309,10 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                       alt={show.title}
                       className="w-24 h-24 object-cover filter brightness-95 shrink-0"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23131d35"/><text x="50%" y="54%" font-family="sans-serif" font-size="8" fill="%2300E5FF" font-weight="bold" text-anchor="middle" dominant-baseline="middle">THEATER</text></svg>`;
+                      }}
                     />
                     <div className="p-3 flex-1 flex flex-col justify-between text-left">
                       <div className="space-y-0.5">
@@ -317,7 +340,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
                                 className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-tight border capitalize ${
                                   isCurrentTagActive 
                                     ? 'bg-[#00E5FF]/15 text-[#00E5FF] border-[#00E5FF]/30' 
-                                    : 'bg-[#1a1a1d] text-slate-300 border-[#222226]'
+                                    : 'bg-slate-800 text-slate-300 border-slate-700/50'
                                 }`}
                               >
                                 {t(tag_item)}
@@ -344,7 +367,10 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
       </div>
 
       {/* Hero Banner - Overridden and styled precisely matching the stunning Cyan Supporter Recruitment Billboard in mockup */}
-      <div className="rounded-[2rem] bg-[#00E5FF] p-6 text-black relative overflow-hidden shadow-2xl flex flex-col justify-between aspect-[1.4/1] text-left">
+      <div 
+        onClick={onSupportersSelect}
+        className="rounded-[2rem] bg-[#00E5FF] p-6 text-black relative overflow-hidden shadow-2xl flex flex-col justify-between aspect-[1.4/1] text-left cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+      >
         
         {/* Subtle abstract background eye icon tracing */}
         <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-12 translate-y-12">
@@ -366,7 +392,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
               {t("1기 대모집!")}
             </h2>
             <p className="text-xs text-black/80 font-bold leading-normal font-sans pt-1">
-              {t("접근성 리뷰하고 리워드 받자")}
+              {t("배리어 프리를 넘어 유니버설 디자인으로. 장벽 없는 공연 문화를 함께 만들 활동가를 찾습니다.")}
             </p>
           </div>
         </div>
@@ -374,8 +400,10 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
         {/* Action interactive button shape */}
         <div className="pt-4 relative z-10">
           <button
-            onClick={handleSupporterApply}
-            disabled={isSupporterRegistered}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSupportersSelect();
+            }}
             className={`px-5 py-1.5 rounded-full text-xs font-black tracking-tight transition-all border-2 border-black inline-flex items-center gap-1.5 cursor-pointer ${
               isSupporterRegistered
                 ? 'bg-black text-[#00E5FF]'
@@ -384,7 +412,7 @@ export default function HomeTab({ currentUser, onShowSelect, onAnnounce, highCon
           >
             {isSupporterRegistered ? (
               <>
-                <span>{t("지원완료 ♿")}</span>
+                <span>{t("지원서 확인 / 수정 ♿")}</span>
               </>
             ) : (
               <>
